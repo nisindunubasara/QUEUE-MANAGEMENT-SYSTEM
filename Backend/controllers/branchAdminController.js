@@ -138,13 +138,8 @@ export const getBranchAdminOperations = async (req, res) => {
         .select("_id serviceId counterName status assignedStaffId")
         .sort({ createdAt: -1 })
         .lean(),
-<<<<<<< HEAD
-      User.find({ role: "staff", branchId })
-        .select("_id name email status")
-=======
       User.find({ role: { $in: ["staff", "doctor"] }, branchId })
         .select("_id name email role status")
->>>>>>> main
         .sort({ createdAt: -1 })
         .lean(),
     ]);
@@ -181,10 +176,7 @@ export const getBranchAdminOperations = async (req, res) => {
               id: assignedStaff._id,
               name: assignedStaff.name,
               email: assignedStaff.email,
-<<<<<<< HEAD
-=======
               role: assignedStaff.role,
->>>>>>> main
               status: assignedStaff.status,
             }
           : null,
@@ -218,10 +210,7 @@ export const getBranchAdminOperations = async (req, res) => {
         id: staff._id,
         name: staff.name,
         email: staff.email,
-<<<<<<< HEAD
-=======
         role: staff.role,
->>>>>>> main
         status: staff.status,
       }));
 
@@ -231,10 +220,7 @@ export const getBranchAdminOperations = async (req, res) => {
         id: staff._id,
         name: staff.name,
         email: staff.email,
-<<<<<<< HEAD
-=======
         role: staff.role,
->>>>>>> main
         status: staff.status,
       }));
 
@@ -244,10 +230,7 @@ export const getBranchAdminOperations = async (req, res) => {
         id: staff._id,
         name: staff.name,
         email: staff.email,
-<<<<<<< HEAD
-=======
         role: staff.role,
->>>>>>> main
         status: staff.status,
       }));
 

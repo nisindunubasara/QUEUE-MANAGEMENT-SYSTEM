@@ -107,8 +107,6 @@ const buildTokenResponse = (token) => ({
   updatedAt: token.updatedAt,
 });
 
-<<<<<<< HEAD
-=======
 const buildQueueResponse = (tokens = []) => tokens.map((token) => buildTokenResponse(token));
 
 const getQueueSnapshot = async (branchId, serviceId) => {
@@ -117,7 +115,6 @@ const getQueueSnapshot = async (branchId, serviceId) => {
     .lean();
 };
 
->>>>>>> main
 // create token
 export const createToken = async (req, res) => {
   try {
@@ -678,8 +675,6 @@ export const skipAndCallNextToken = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-=======
 export const skipAndPushBackToken = async (req, res) => {
   try {
     const tokenId = req.body?.tokenId || req.params?.id;
@@ -853,7 +848,6 @@ export const reactivateToken = async (req, res) => {
   }
 };
 
->>>>>>> main
 export const getNextWaitingToken = async (req, res) => {
   try {
     const { serviceId, branchId } = req.query;
@@ -949,8 +943,6 @@ export const getProcessedTokensByCounter = async (req, res) => {
     console.error("getProcessedTokensByCounter error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
-<<<<<<< HEAD
-=======
 };
 
 export const getWaitingQueueTokens = async (req, res) => {
@@ -1009,5 +1001,4 @@ export const getTemporarilySkippedTokens = async (req, res) => {
     console.error("getTemporarilySkippedTokens error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
->>>>>>> main
 };

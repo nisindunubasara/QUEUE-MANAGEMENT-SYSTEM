@@ -11,10 +11,7 @@ export const CANONICAL_ROLES = {
   ORGANIZATION_ADMIN: "organization_admin",
   BRANCH_ADMIN: "branch_admin",
   STAFF: "staff",
-<<<<<<< HEAD
-=======
   DOCTOR: "doctor",
->>>>>>> main
 };
 
 export const normalizeRole = (role) => {
@@ -37,10 +34,7 @@ export const normalizeRole = (role) => {
     branch_admin: CANONICAL_ROLES.BRANCH_ADMIN,
     branchadmin: CANONICAL_ROLES.BRANCH_ADMIN,
     staff: CANONICAL_ROLES.STAFF,
-<<<<<<< HEAD
-=======
     doctor: CANONICAL_ROLES.DOCTOR,
->>>>>>> main
   };
 
   return roleMap[lowerRole] || role;

@@ -34,10 +34,7 @@ const REGISTRATION_ALLOWED_DB_ROLES = new Set([
   "police_division_admin",
   "police_branch_admin",
   "police_staff",
-<<<<<<< HEAD
-=======
   "doctor",
->>>>>>> main
 ]);
 
 const normalizeText = (value = "") => String(value || "").trim();
@@ -371,8 +368,6 @@ export const createStaffUser = async (req, res) => {
       return errorResponse(res, 404, "Branch not found in your scope");
     }
 
-<<<<<<< HEAD
-=======
     const requestedRole = normalizeText(req.body?.role || "").toLowerCase();
     const resolvedRole = tenantType === "hospital" && requestedRole === "doctor" ? "doctor" : "staff";
 
@@ -380,7 +375,6 @@ export const createStaffUser = async (req, res) => {
       return errorResponse(res, 400, `Role ${resolvedRole} is not allowed for registration`);
     }
 
->>>>>>> main
     const organizationScope = getOrganizationScope(req.user);
     const resolvedOrganizationId = organizationScope.organizationId || branch.organizationId || null;
     const resolvedOrganizationName =
@@ -397,11 +391,7 @@ export const createStaffUser = async (req, res) => {
       password: req.body.password,
       phone: req.body.phone || "",
       username: req.body.username || "",
-<<<<<<< HEAD
-      role: "staff",
-=======
       role: resolvedRole,
->>>>>>> main
       tenantType,
       organizationId: resolvedOrganizationId,
       organizationName: resolvedOrganizationName,

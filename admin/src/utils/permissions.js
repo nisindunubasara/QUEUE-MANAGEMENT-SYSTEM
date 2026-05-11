@@ -56,8 +56,6 @@ export const roleHierarchy = {
     canCreateOrgAdmins: false,
     canViewReports: false,
   },
-<<<<<<< HEAD
-=======
   [CANONICAL_ROLES.DOCTOR]: {
     label: "Doctor",
     dashboardPath: "/doctor/dashboard",
@@ -67,7 +65,6 @@ export const roleHierarchy = {
     canCreateOrgAdmins: false,
     canViewReports: false,
   },
->>>>>>> main
 };
 
 // Route-level access control
@@ -78,10 +75,7 @@ const routeRoleMap = {
   "/organization-admin": [CANONICAL_ROLES.ORGANIZATION_ADMIN],
   "/branch-admin": [CANONICAL_ROLES.BRANCH_ADMIN],
   "/staff": [CANONICAL_ROLES.STAFF],
-<<<<<<< HEAD
-=======
   "/doctor": [CANONICAL_ROLES.DOCTOR],
->>>>>>> main
 };
 
 export const isSuperAdmin = (role) => 
@@ -95,11 +89,8 @@ export const isBranchAdmin = (role) => role === CANONICAL_ROLES.BRANCH_ADMIN;
 
 export const isStaff = (role) => role === CANONICAL_ROLES.STAFF;
 
-<<<<<<< HEAD
-=======
 export const isDoctor = (role) => role === CANONICAL_ROLES.DOCTOR;
 
->>>>>>> main
 export const canAccessRoute = (role, path) => {
   if (!role || !path) {
     return false;
@@ -136,10 +127,6 @@ export const roleSidebarLinks = {
   [CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]: [
     { label: "Dashboard", to: "/hospital-super-admin/dashboard" },
     { label: "Hospitals", to: "/hospital-super-admin/hospitals" },
-<<<<<<< HEAD
-    { label: "Services", to: "/hospital-super-admin/services" },
-=======
->>>>>>> main
     { label: "Hospitals Registration", to: "/hospital-super-admin/registered-hospitals" },
     { label: "Branch Requests", to: "/hospital-super-admin/branch-requests" },
     { label: "Registered Admins", to: "/hospital-super-admin/hospital-admins" },
@@ -179,13 +166,10 @@ export const roleSidebarLinks = {
     { label: "Profile", to: "/staff/profile" },
     { label: "Tasks", to: "/staff/tasks" },
   ],
-<<<<<<< HEAD
-=======
   [CANONICAL_ROLES.DOCTOR]: [
     { label: "Dashboard", to: "/doctor/dashboard" },
     { label: "Profile", to: "/doctor/profile" },
   ],
->>>>>>> main
 };
 
 export const getSidebarLinksByRole = (role) => {

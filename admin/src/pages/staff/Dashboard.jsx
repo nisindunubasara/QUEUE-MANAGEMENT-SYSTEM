@@ -5,24 +5,17 @@ import {
   getCurrentStaffTask,
   callNextToken,
   skipAndCallNextToken,
-<<<<<<< HEAD
-=======
   skipAndPushBackToken,
   reactivateToken,
->>>>>>> main
   endStaffTask,
   getNextWaitingToken,
   getStaffBranchCounters,
   getStaffBranchServices,
   getWaitingTokenCount,
-<<<<<<< HEAD
-  getProcessedTokens,
-=======
   getWaitingQueueTokens,
   getTemporarilySkippedTokens,
   getProcessedTokens,
   cancelToken,
->>>>>>> main
 } from "../../services/staffService";
 
 const formatElapsedTime = (startedAt, nowTimestamp) => {
@@ -72,16 +65,10 @@ const clearCurrentTaskFromStorage = () => {
 };
 
 export default function StaffDashboard() {
-<<<<<<< HEAD
-  const { user } = useAuth();
-  const context = useOutletContext() || {};
-  const theme = context.tenant?.theme;
-=======
   const { user, tenantType } = useAuth();
   const context = useOutletContext() || {};
   const theme = context.tenant?.theme;
   const isHospitalTenant = String(user?.tenantType || tenantType || "").toLowerCase() === "hospital";
->>>>>>> main
 
   // State for branch overview
   const [counters, setCounters] = useState([]);
@@ -100,10 +87,7 @@ export default function StaffDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [taskError, setTaskError] = useState(null);
   const [waitingTokens, setWaitingTokens] = useState([]);
-<<<<<<< HEAD
-=======
   const [temporarilySkippedTokens, setTemporarilySkippedTokens] = useState([]);
->>>>>>> main
   const [workSession, setWorkSession] = useState(null);
   const [workSessionStartedAt, setWorkSessionStartedAt] = useState(null);
 
@@ -112,10 +96,6 @@ export default function StaffDashboard() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(null);
 
-<<<<<<< HEAD
-  // Work session
-  const [endingSession, setEndingSession] = useState(false);
-=======
   const [cancelingTokenId, setCancelingTokenId] = useState(null);
 
   // Work session
@@ -123,7 +103,6 @@ export default function StaffDashboard() {
   
   // Track if this is the initial load (shows spinner) vs background polling refresh (silent)
   const [isInitialLoad, setIsInitialLoad] = useState(true);
->>>>>>> main
 
   // Restore currentTask from localStorage on mount
   useEffect(() => {
@@ -157,19 +136,6 @@ export default function StaffDashboard() {
   }, []);
 
   // Fetch current task and next in queue
-<<<<<<< HEAD
-  const fetchTaskAndQueue = async () => {
-    setLoading(true);
-    setTaskError(null);
-    console.log("fetchTaskAndQueue started...");
-    try {
-      const res = await getCurrentStaffTask();
-      const task = res?.currentTask || null;
-
-      setWorkSession(task);
-      // NOTE: Do NOT clear currentTask here — it's managed by callNextToken and localStorage.
-      // currentTask represents the token being served, workSession represents the staff session.
-=======
   const refreshQueueData = async (serviceId, branchId) => {
     if (!serviceId || !branchId) {
       setWaitingTokens([]);
@@ -229,25 +195,12 @@ export default function StaffDashboard() {
         saveCurrentTaskToStorage(null);
       }
       
->>>>>>> main
       // Set work session start time from backend, or use current time if not available
       if (task && !workSessionStartedAt) {
         setWorkSessionStartedAt(task.startedAt || new Date().toISOString());
       }
       console.log("Current Task Response:", res);
 
-<<<<<<< HEAD
-      // වැදගත්: user.branchId වෙනුවට task.branchId භාවිතා කරන්න
-      if (task?.serviceId && task?.branchId) { // user.branchId වෙනුවට task.branchId භාවිතා කරන්න
-      const [nextRes, statsRes] = await Promise.all([
-        getNextWaitingToken(task.serviceId, task.branchId),
-        getWaitingTokenCount({ serviceId: task.serviceId, branchId: task.branchId })
-      ]);
-        
-        setNextWaitingToken(nextRes.nextToken || null);
-        setQueueStats(statsRes.count );
-      } else {
-=======
       // Direct ID extraction: Get serviceId and branchId from task or calledToken
       let serviceId = task?.serviceId || calledToken?.serviceId || null;
       let branchId = task?.branchId || calledToken?.branchId || null;
@@ -269,24 +222,11 @@ export default function StaffDashboard() {
         // No work session, clear queue
         setWaitingTokens([]);
         setTemporarilySkippedTokens([]);
->>>>>>> main
         setNextWaitingToken(null);
         setQueueStats(0);
       }
     } catch (err) {
       console.error("Error in fetchTaskAndQueue:", err);
-<<<<<<< HEAD
-      setTaskError(err.message || "Failed to load task");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTaskAndQueue();
-  }, []);
-
-=======
       // Only set error on initial load, not during background refreshes
       if (!isBackgroundFetch) {
         setTaskError(err.message || "Failed to load task");
@@ -320,7 +260,6 @@ export default function StaffDashboard() {
     return () => clearInterval(pollInterval);
   }, [workSession]);
 
->>>>>>> main
   // Fetch processed tokens history for current counter
   const fetchHistory = async (counterId) => {
     if (!counterId) return;
@@ -338,8 +277,6 @@ export default function StaffDashboard() {
     }
   };
 
-<<<<<<< HEAD
-=======
   const refreshDashboardData = async ({ serviceId, branchId, counterId } = {}) => {
     const resolvedServiceId = serviceId || workSession?.serviceId || currentTask?.serviceId;
     const resolvedBranchId = branchId || workSession?.branchId || currentTask?.branchId;
@@ -352,7 +289,6 @@ export default function StaffDashboard() {
     }
   };
 
->>>>>>> main
   useEffect(() => {
     if (workSession?.counterId) {
       fetchHistory(workSession.counterId);
@@ -414,25 +350,11 @@ const handleProcessToken = async () => {
       saveCurrentTaskToStorage(newTask); 
       setNowTimestamp(Date.now());
 
-<<<<<<< HEAD
-      if (res.token?.serviceId && res.token?.branchId) {
-        const [nextRes, statsRes] = await Promise.all([
-          getNextWaitingToken(res.token.serviceId, res.token.branchId),
-          getWaitingTokenCount({ serviceId: res.token.serviceId, branchId: res.token.branchId }),
-        ]);
-        setNextWaitingToken(nextRes.nextToken || null);
-        setQueueStats(statsRes.count || 0);
-      }
-      
-      // Refresh history after processing token
-      await fetchHistory(activeCounterId);
-=======
       await refreshDashboardData({
         serviceId: res.token?.serviceId,
         branchId: res.token?.branchId,
         counterId: activeCounterId,
       });
->>>>>>> main
     } else {
       // පෝලිම හිස් නම් (res.token === null)
       setCurrentTask(null);
@@ -440,11 +362,8 @@ const handleProcessToken = async () => {
       setNextWaitingToken(null);
       setQueueStats(0);
       setTaskError(res.message || "No more customers in queue");
-<<<<<<< HEAD
-=======
 
       await refreshDashboardData({ counterId: activeCounterId });
->>>>>>> main
     }
   } catch (error) {
     // Error එකක් ආ විට (උදා: 404 response එකකදී)
@@ -469,9 +388,6 @@ const handleSkipToken = async () => {
       throw new Error("Counter ID එක හඳුනා ගැනීමට නොහැකි විය.");
     }
 
-<<<<<<< HEAD
-    const res = await skipAndCallNextToken(activeCounterId);
-=======
     if (!currentTask?._id) {
       throw new Error("No active token to skip.");
     }
@@ -486,7 +402,6 @@ const handleSkipToken = async () => {
 
     // 2) Immediately call next token
     const res = await callNextToken(activeCounterId);
->>>>>>> main
 
     if (res.success && res.token) {
       const newTask = {
@@ -498,19 +413,6 @@ const handleSkipToken = async () => {
       saveCurrentTaskToStorage(newTask);
       setNowTimestamp(Date.now());
 
-<<<<<<< HEAD
-      const [nextRes, statsRes] = await Promise.all([
-        getNextWaitingToken(res.token.serviceId, res.token.branchId),
-        getWaitingTokenCount({ serviceId: res.token.serviceId, branchId: res.token.branchId }),
-      ]);
-      setNextWaitingToken(nextRes.nextToken || null);
-      setQueueStats(statsRes.count || 0);
-      
-      // Refresh history after processing token
-      await fetchHistory(activeCounterId);
-    } else {
-      // Skip කළ පසු පෝලිම හිස් නම්
-=======
       await refreshDashboardData({
         serviceId: res.token?.serviceId,
         branchId: res.token?.branchId,
@@ -518,17 +420,13 @@ const handleSkipToken = async () => {
       });
     } else {
       // Skip කළ පසු call කිරීමට පෝලිමේ කෙනෙක් නැත්නම්
->>>>>>> main
       setCurrentTask(null);
       clearCurrentTaskFromStorage();
       setNextWaitingToken(null);
       setQueueStats(0);
       setTaskError(res.message || "No more customers in queue");
-<<<<<<< HEAD
-=======
 
       await refreshDashboardData({ counterId: activeCounterId });
->>>>>>> main
     }
   } catch (error) {
     setCurrentTask(null);
@@ -559,8 +457,6 @@ const handleSkipToken = async () => {
     }
   };
 
-<<<<<<< HEAD
-=======
   const handleSkipAndPushToken = async (token) => {
     if (!token?._id) return;
 
@@ -630,7 +526,6 @@ const handleSkipToken = async () => {
     }
   };
 
->>>>>>> main
   // UI
   if (loading || countersLoading || servicesLoading) {
     return (
@@ -646,116 +541,6 @@ const handleSkipToken = async () => {
       {workSession && (
         <section className="grid md:grid-cols-3 gap-6">
           {/* Main Card */}
-<<<<<<< HEAD
-          <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 md:p-10 shadow-xl flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-dashed pb-6">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 block">
-                  Serving Now
-                </span>
-                <h2
-                  className={`text-6xl md:text-8xl font-black tracking-tighter ${theme?.text || "text-blue-600"}`}
-                >
-                  {currentTask?.tokenNumber || "--"}
-                </h2>
-              </div>
-              {currentTask?.startedAt ? (
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-slate-500">Customer Serving Time</span>
-                  <span className="font-mono text-2xl font-bold text-slate-700 bg-slate-100 px-4 py-1 rounded-lg">
-                    {elapsedTime}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-slate-500">No Customer</span>
-                  <span className="font-mono text-2xl font-bold text-slate-400 px-4 py-1">
-                    --:--:--
-                  </span>
-                </div>
-              )}
-            </div>
-            {/* Token Details */}
-            <div className="grid grid-cols-2 gap-4 text-left">
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <p className="text-xs font-bold text-slate-400 uppercase">
-                  Service
-                </p>
-                <p className="text-lg font-bold text-slate-900">
-                  {currentTask?.serviceName || "-"}
-                </p>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <p className="text-xs font-bold text-slate-400 uppercase">
-                  Customer
-                </p>
-                <p className="text-lg font-bold text-slate-900">
-                  {currentTask?.fullName || "N/A"}
-                </p>
-              </div>
-            </div>
-            {/* Next in Queue & Stats */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex-1">
-                <span className="text-[10px] font-bold text-sky-500 uppercase tracking-widest">
-                  Next Up in Queue
-                </span>
-                <p className="text-lg font-bold text-sky-900">
-                  {nextWaitingToken
-                    ? `Token: ${nextWaitingToken.tokenNumber}`
-                    : "Queue is Empty"}
-                </p>
-                {nextWaitingToken && (
-                  <div className="text-xs text-sky-600 font-medium">
-                    {nextWaitingToken.fullName}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 text-right">
-                <span className="text-xs text-slate-500">Waiting in Queue</span>
-                <div className="text-2xl font-bold text-slate-900">
-                  {queueStats ?? "-"}
-                </div>
-              </div>
-            </div>
-            {/* Action Button */}
-            <div className="pt-2">
-              {currentTask ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <button
-                    onClick={handleProcessToken}
-                    disabled={actionLoading}
-                    className={`w-full ${theme?.primary || "bg-blue-600"} text-white py-6 rounded-2xl text-2xl font-bold shadow-xl active:scale-95 transition-all hover:brightness-110 disabled:opacity-50`}
-                  >
-                    {actionLoading ? "Processing..." : "Complete & Call Next"}
-                  </button>
-                  <button
-                    onClick={handleSkipToken}
-                    disabled={actionLoading}
-                    className="w-full rounded-2xl border border-amber-200 bg-amber-50 py-6 text-2xl font-bold text-amber-700 shadow-sm transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50"
-                  >
-                    {actionLoading ? "Processing..." : "Skip & Call Next"}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleProcessToken}
-                  disabled={actionLoading}
-                  className={`${theme?.primary || "bg-blue-600"} text-white w-full py-6 rounded-2xl text-2xl font-bold shadow-lg active:scale-95 transition-all disabled:opacity-50`}
-                >
-                  {actionLoading ? "Processing..." : "Call First Customer"}
-                </button>
-              )}
-              <p className="mt-4 text-sm text-slate-400 font-medium">
-                Clicking this will finish current task and fetch the next token
-                instantly.
-              </p>
-              {taskError && (
-                <div className="text-red-500 text-sm mt-2">{taskError}</div>
-              )}
-            </div>
-          </div>
-=======
           {isHospitalTenant ? (
             <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 md:p-10 shadow-xl">
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 block">
@@ -875,7 +660,6 @@ const handleSkipToken = async () => {
               </div>
             </div>
           )}
->>>>>>> main
           {/* Work Session Details */}
           <aside className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col gap-4 justify-between min-h-[260px]">
             <div>
@@ -931,8 +715,6 @@ const handleSkipToken = async () => {
         </section>
       )}
 
-<<<<<<< HEAD
-=======
       {workSession && (
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl">
@@ -1055,7 +837,6 @@ const handleSkipToken = async () => {
         </section>
       )}
 
->>>>>>> main
       {/* If no active work session, show call first customer */}
       {!workSession && (
         <section className="bg-white rounded-3xl border border-slate-200 p-10 shadow-xl text-center">

@@ -64,8 +64,6 @@ export const skipAndCallNextToken = async (counterId) => {
   }
 };
 
-<<<<<<< HEAD
-=======
 export const skipAndPushBackToken = async (tokenId) => {
   try {
     const response = await api.post("/tokens/skip-and-push-back", { tokenId });
@@ -102,7 +100,6 @@ export const getTemporarilySkippedTokens = async (params) => {
   }
 };
 
->>>>>>> main
 // පෝලිමේ ඉන්න ගණන බලාගන්න (මේකට backend එකේ endpoint එකක් පසුව හදමු, දැනට fetchTokens පාවිච්චි කළ හැකියි)
 export const getWaitingTokenCount = async (params) => {
   try {
@@ -133,8 +130,6 @@ export const getProcessedTokens = async (counterId, limit = 20) => {
   } catch (error) {
     throw error.response?.data || { success: false, message: "Error fetching processed tokens" };
   }
-<<<<<<< HEAD
-=======
 };
 
 export const cancelToken = async (tokenId) => {
@@ -144,5 +139,4 @@ export const cancelToken = async (tokenId) => {
   } catch (error) {
     throw error.response?.data || { success: false, message: "Error cancelling token" };
   }
->>>>>>> main
 };

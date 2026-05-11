@@ -53,10 +53,7 @@ import SharedOrganizationAdminReports from "../pages/organizationAdmin/Reports";
 import BranchAdminDashboard from "../pages/branchAdmin/Dashboard";
 import BranchAdminStaff from "../pages/branchAdmin/Staff";
 import BranchAdminAddStaff from "../pages/branchAdmin/AddStaff";
-<<<<<<< HEAD
-=======
 import BranchAdminAddDoctor from "../pages/branchAdmin/AddDoctor";
->>>>>>> main
 import BranchAdminOperations from "../pages/branchAdmin/Operations";
 import BranchAdminDetails from "../pages/branchAdmin/BranchDetails";
 
@@ -64,10 +61,7 @@ import BranchAdminDetails from "../pages/branchAdmin/BranchDetails";
 import StaffDashboard from "../pages/staff/Dashboard";
 import StaffProfile from "../pages/staff/Profile";
 import StaffTasks from "../pages/staff/Tasks";
-<<<<<<< HEAD
-=======
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
->>>>>>> main
 
 import { getDefaultDashboardPath } from "../utils/permissions";
 import ProtectedRoute from "./ProtectedRoute";
@@ -85,10 +79,7 @@ export default function AppRoutes() {
       <Route path="/admin-login" element={<Login loginType="organization_admin" />} />
       <Route path="/branch-login" element={<Login loginType="branch_admin" />} />
       <Route path="/staff-login" element={<Login loginType="staff" />} />
-<<<<<<< HEAD
-=======
       <Route path="/doctor-login" element={<Login loginType="doctor" />} />
->>>>>>> main
 
       <Route
         element={
@@ -427,8 +418,6 @@ export default function AppRoutes() {
           }
         />
         <Route
-<<<<<<< HEAD
-=======
           path="/branch-admin/add-doctor"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BRANCH_ADMIN]}>
@@ -437,7 +426,6 @@ export default function AppRoutes() {
           }
         />
         <Route
->>>>>>> main
           path="/branch-admin/operations"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BRANCH_ADMIN]}>
@@ -480,8 +468,6 @@ export default function AppRoutes() {
           }
         />
 
-<<<<<<< HEAD
-=======
         {/* DOCTOR ROUTES */}
         <Route
           path="/doctor/dashboard"
@@ -500,7 +486,6 @@ export default function AppRoutes() {
           }
         />
 
->>>>>>> main
         
       </Route>
 

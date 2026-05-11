@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-=======
 import { useAuth } from "../../context/AuthContext";
->>>>>>> main
 import { getBranchStaffUsers } from "../../services/branchAdminService";
 
 const formatStatusLabel = (status = "") => {
@@ -12,8 +9,6 @@ const formatStatusLabel = (status = "") => {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 };
 
-<<<<<<< HEAD
-=======
 const getRoleBadgeClass = (role = "") => {
   const normalized = String(role || "").trim().toLowerCase();
 
@@ -28,7 +23,6 @@ const getRoleBadgeClass = (role = "") => {
   return "bg-slate-100 text-slate-700";
 };
 
->>>>>>> main
 const getStatusBadgeClass = (status = "") => {
   const normalized = String(status || "").trim().toLowerCase();
 
@@ -49,17 +43,11 @@ const getStatusBadgeClass = (status = "") => {
 
 export default function BranchAdminStaff() {
   const navigate = useNavigate();
-<<<<<<< HEAD
-  const [staffUsers, setStaffUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-=======
   const { tenantType } = useAuth();
   const [staffUsers, setStaffUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const isHospitalTenant = String(tenantType || "").trim().toLowerCase() === "hospital";
->>>>>>> main
 
   useEffect(() => {
     let isMounted = true;
@@ -104,14 +92,6 @@ export default function BranchAdminStaff() {
           <p className="mt-2 text-sm text-slate-500">Manage staff members for your branch</p>
         </div>
 
-<<<<<<< HEAD
-        <button
-          onClick={() => navigate("/branch-admin/add-staff")}
-          className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700"
-        >
-          + Add Staff
-        </button>
-=======
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => navigate("/branch-admin/add-staff")}
@@ -129,7 +109,6 @@ export default function BranchAdminStaff() {
             </button>
           )}
         </div>
->>>>>>> main
       </div>
 
       {loading && (
@@ -160,10 +139,7 @@ export default function BranchAdminStaff() {
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Email</th>
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Username</th>
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Phone</th>
-<<<<<<< HEAD
-=======
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Role</th>
->>>>>>> main
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Status</th>
                 </tr>
               </thead>
@@ -171,19 +147,13 @@ export default function BranchAdminStaff() {
                 {staffUsers.map((staff) => (
                   <tr key={staff.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3 font-medium text-slate-900">{staff.name || "-"}</td>
-<<<<<<< HEAD
-                    <td className="px-4 py-3 text-slate-600">{staff.email || "-"}</td>
-=======
                     <td className="px-4 py-3 max-w-[280px] truncate text-slate-600" title={staff.email || ""}>
                       {staff.email || "-"}
                     </td>
->>>>>>> main
                     <td className="px-4 py-3 text-slate-600">{staff.username || "-"}</td>
                     <td className="px-4 py-3 text-slate-600">{staff.phone || "-"}</td>
                     <td className="px-4 py-3">
                       <span
-<<<<<<< HEAD
-=======
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold capitalize ${getRoleBadgeClass(
                           staff.role
                         )}`}
@@ -193,7 +163,6 @@ export default function BranchAdminStaff() {
                     </td>
                     <td className="px-4 py-3">
                       <span
->>>>>>> main
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(
                           staff.status
                         )}`}

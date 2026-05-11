@@ -99,11 +99,7 @@ export default function HospitalSuperAdminMainCategories() {
         {organizations.map((org) => (
           <div key={org._id} className="grid grid-cols-12 items-center border-b border-gray-100 px-4 py-3 text-sm last:border-b-0">
             <div className="col-span-4 font-medium text-gray-900">{org.organizationName || "Unnamed Hospital"}</div>
-<<<<<<< HEAD
-            <div className="col-span-2 text-gray-700">{org.organizationType || "N/A"}</div>
-=======
             <div className="col-span-2 text-gray-700">{org.category || "N/A"}</div>
->>>>>>> main
             <div className="col-span-2 text-gray-700">{org.city || "N/A"}</div>
             <div className="col-span-2 text-gray-700">{getBranchCount(org._id)}</div>
             <div className="col-span-2">

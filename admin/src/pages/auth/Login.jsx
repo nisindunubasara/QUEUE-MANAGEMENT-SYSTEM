@@ -12,10 +12,7 @@ const LOGIN_TYPES = {
   ORGANIZATION_ADMIN: "organization_admin",
   BRANCH_ADMIN: "branch_admin",
   STAFF: "staff",
-<<<<<<< HEAD
-=======
   DOCTOR: "doctor",
->>>>>>> main
 };
 
 // Dummy user database - mimics backend auth.
@@ -95,8 +92,6 @@ const DUMMY_USERS = {
     organizationId: "org_hospital_001",
     branchId: "branch_hospital_001",
   },
-<<<<<<< HEAD
-=======
 
   // Doctor - /doctor-login
   "doctor@gmail.com": {
@@ -107,7 +102,6 @@ const DUMMY_USERS = {
     organizationId: "org_hospital_001",
     branchId: "branch_hospital_001",
   },
->>>>>>> main
 };
 
 // Login page configs per login type
@@ -142,14 +136,11 @@ const LOGIN_CONFIG = {
     subtitle: "Shared staff access for all tenants",
     subtitle2: "Use staff credentials",
   },
-<<<<<<< HEAD
-=======
   [LOGIN_TYPES.DOCTOR]: {
     title: "Doctor Login",
     subtitle: "Access your medical dashboard",
     subtitle2: "Demo: doctor@gmail.com / 123456",
   },
->>>>>>> main
   [LOGIN_TYPES.DEFAULT]: {
     title: "Admin Login",
     subtitle: "Select admin type or use general login",
@@ -164,10 +155,7 @@ const ALLOWED_ROLES_BY_LOGIN_TYPE = {
   [LOGIN_TYPES.ORGANIZATION_ADMIN]: ["organization_admin"],
   [LOGIN_TYPES.BRANCH_ADMIN]: ["branch_admin"],
   [LOGIN_TYPES.STAFF]: ["staff"],
-<<<<<<< HEAD
-=======
   [LOGIN_TYPES.DOCTOR]: ["doctor"],
->>>>>>> main
   [LOGIN_TYPES.DEFAULT]: [],
 };
 

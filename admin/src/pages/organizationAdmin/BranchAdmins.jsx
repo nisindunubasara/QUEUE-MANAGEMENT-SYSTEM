@@ -34,11 +34,7 @@ const getStatusBadgeClass = (status = "") => {
 export default function SharedOrganizationAdminBranchAdmins() {
   const { tenantType } = useAuth();
   const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
-<<<<<<< HEAD
-  const isCompanyTenant = ["bank", "supermarket"].includes(normalizedTenantType);
-=======
   const isCompanyTenant = ["bank", "supermarket", "hospital", "police"].includes(normalizedTenantType);
->>>>>>> main
 
   const [branches, setBranches] = useState([]);
   const [branchAdmins, setBranchAdmins] = useState([]);

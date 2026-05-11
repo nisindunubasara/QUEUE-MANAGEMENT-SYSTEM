@@ -30,11 +30,7 @@ const StaffListBlock = ({ title, staff = [] }) => (
     <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
 
     {staff.length === 0 ? (
-<<<<<<< HEAD
-      <p className="mt-3 text-sm text-slate-500">No staff</p>
-=======
       <p className="mt-3 text-sm text-slate-500">No staff or doctors</p>
->>>>>>> main
     ) : (
       <div className="mt-3 space-y-2">
         {staff.map((member) => (
@@ -42,9 +38,6 @@ const StaffListBlock = ({ title, staff = [] }) => (
             key={member.id}
             className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
           >
-<<<<<<< HEAD
-            <p className="font-medium text-slate-900">{member.name || "-"}</p>
-=======
             <div className="flex items-start justify-between gap-3">
               <p className="font-medium text-slate-900">{member.name || "-"}</p>
               {member.role && (
@@ -53,7 +46,6 @@ const StaffListBlock = ({ title, staff = [] }) => (
                 </span>
               )}
             </div>
->>>>>>> main
             <p className="text-slate-600">{member.email || "-"}</p>
           </div>
         ))}

@@ -27,14 +27,11 @@ const getStaffScope = (user = {}) => {
   };
 };
 
-<<<<<<< HEAD
-=======
 const isStaffOrDoctor = (user = {}) => {
   const role = String(user?.role || "").trim().toLowerCase();
   return role === "staff" || role === "doctor";
 };
 
->>>>>>> main
 const buildScopedWorkSessionQuery = (user = {}, extraQuery = {}) => {
   const scope = getStaffScope(user);
 
@@ -55,17 +52,10 @@ export const getStaffBranchServices = async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
-    if (!isStaff(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Only staff can view branch services",
-=======
     if (!isStaffOrDoctor(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Only staff or doctor can view branch services",
->>>>>>> main
       });
     }
 
@@ -117,17 +107,10 @@ export const getStaffBranchCounters = async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
-    if (!isStaff(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Only staff can view branch counters",
-=======
     if (!isStaffOrDoctor(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Only staff or doctor can view branch counters",
->>>>>>> main
       });
     }
 
@@ -180,17 +163,10 @@ export const getCurrentStaffTask = async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
-    if (!isStaff(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Only staff can view current task",
-=======
     if (!isStaffOrDoctor(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Only staff or doctor can view current task",
->>>>>>> main
       });
     }
 
@@ -214,8 +190,6 @@ export const getCurrentStaffTask = async (req, res) => {
       .sort({ startedAt: -1 })
       .lean();
 
-<<<<<<< HEAD
-=======
     // If there is an active session, check if there's a currently called token for that counter
     let calledToken = null;
     if (activeSession?.counterId) {
@@ -231,7 +205,6 @@ export const getCurrentStaffTask = async (req, res) => {
       console.log("Called token for counter:", activeSession.counterId, calledToken);
     }
 
->>>>>>> main
     return res.status(200).json({
       success: true,
       currentTask: activeSession
@@ -245,8 +218,6 @@ export const getCurrentStaffTask = async (req, res) => {
             status: activeSession.status,
           }
         : null,
-<<<<<<< HEAD
-=======
       currentToken: calledToken
         ? {
             _id: calledToken._id,
@@ -261,7 +232,6 @@ export const getCurrentStaffTask = async (req, res) => {
             startedAt: calledToken.startedAt,
           }
         : null,
->>>>>>> main
     });
   } catch (error) {
     console.error("getCurrentStaffTask error:", error);
@@ -281,17 +251,10 @@ export const startStaffTask = async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
-    if (!isStaff(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Only staff can start tasks",
-=======
     if (!isStaffOrDoctor(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Only staff or doctor can start tasks",
->>>>>>> main
       });
     }
 
@@ -340,17 +303,10 @@ export const startStaffTask = async (req, res) => {
       ),
     ]);
 
-<<<<<<< HEAD
-    if (!staffUser || !isStaff(staffUser)) {
-      return res.status(403).json({
-        success: false,
-        message: "Only staff can start tasks",
-=======
     if (!staffUser || !isStaffOrDoctor(staffUser)) {
       return res.status(403).json({
         success: false,
         message: "Only staff or doctor can start tasks",
->>>>>>> main
       });
     }
 
@@ -534,17 +490,10 @@ export const endStaffTask = async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
-    if (!isStaff(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Only staff can end tasks",
-=======
     if (!isStaffOrDoctor(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Only staff or doctor can end tasks",
->>>>>>> main
       });
     }
 
@@ -665,17 +614,10 @@ export const getStaffUsers = async (req, res) => {
     }
 
     const staffUsers = await User.find({
-<<<<<<< HEAD
-      role: "staff",
-      branchId,
-    })
-      .select("_id name email username phone status")
-=======
       role: { $in: ["staff", "doctor"] },
       branchId,
     })
       .select("_id name email username phone role status")
->>>>>>> main
       .sort({ createdAt: -1 })
       .lean();
 
@@ -687,10 +629,7 @@ export const getStaffUsers = async (req, res) => {
         email: member.email,
         username: member.username,
         phone: member.phone,
-<<<<<<< HEAD
-=======
         role: member.role,
->>>>>>> main
         status: member.status,
       })),
     });

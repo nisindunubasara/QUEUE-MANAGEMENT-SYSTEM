@@ -5,10 +5,7 @@ import {
   getStaffBranchCounters,
   getStaffBranchServices,
   startStaffTask,
-<<<<<<< HEAD
-=======
   callNextToken,
->>>>>>> main
 } from "../../services/staffService";
 
 const formatDateTime = (value) => {
@@ -125,11 +122,6 @@ export default function StaffTasks() {
     try {
       setSubmitting(true);
       setError("");
-<<<<<<< HEAD
-      await startStaffTask({ serviceId, counterId });
-      const taskResponse = await getCurrentStaffTask();
-      setCurrentTask(taskResponse?.currentTask || null);
-=======
       const res = await startStaffTask({ serviceId, counterId });
       const taskResponse = await getCurrentStaffTask();
       setCurrentTask(taskResponse?.currentTask || null);
@@ -143,7 +135,6 @@ export default function StaffTasks() {
           console.error("auto call next after start", err);
         }
       }
->>>>>>> main
     } catch (err) {
       setError(err?.message || "Failed to start work");
     } finally {

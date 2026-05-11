@@ -719,10 +719,7 @@ export const getOrganizations = async (req, res) => {
 export const getOrganizationsList = async (req, res) => {
   try {
     const tenantType = normalizeTenantType(req.query?.tenantType);
-<<<<<<< HEAD
-=======
     const includePending = String(req.query?.includePending || "").trim().toLowerCase() === "true";
->>>>>>> main
 
     if (!tenantType) {
       return errorResponse(res, 400, "tenantType query parameter is required");
@@ -732,11 +729,6 @@ export const getOrganizationsList = async (req, res) => {
       return errorResponse(res, 400, "tenantType must be one of police, hospital, bank, or supermarket");
     }
 
-<<<<<<< HEAD
-    const organizations = await Organization.find({
-      tenantType,
-      status: { $in: ["approved", "active"] },
-=======
     const statusFilter = tenantType === "police" && includePending
       ? ["pending", "approved", "active"]
       : ["approved", "active"];
@@ -744,7 +736,6 @@ export const getOrganizationsList = async (req, res) => {
     const organizations = await Organization.find({
       tenantType,
       status: { $in: statusFilter },
->>>>>>> main
     })
       .select("_id organizationName divisionName")
       .sort({ organizationName: 1 })
@@ -764,14 +755,10 @@ export const getOrganizationsList = async (req, res) => {
 
         return {
           _id: organization?._id,
-<<<<<<< HEAD
-          name,
-=======
           id: organization?._id,
           name,
           organizationName,
           divisionName,
->>>>>>> main
         };
       })
       .filter(Boolean);

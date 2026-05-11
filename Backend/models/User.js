@@ -47,10 +47,7 @@ const userSchema = new mongoose.Schema(
         "police_division_admin",
         "police_branch_admin",
         "police_staff",
-<<<<<<< HEAD
-=======
         "doctor",
->>>>>>> main
       ],
       required: true,
     },
@@ -60,11 +57,7 @@ const userSchema = new mongoose.Schema(
       enum: ["hospital", "police", "bank", "supermarket","company", null],
       default: null,
       required: function () {
-<<<<<<< HEAD
-        return this.role === "staff";
-=======
         return this.role === "staff" || this.role === "doctor";
->>>>>>> main
       },
     },
 
@@ -72,23 +65,11 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       default: null,
       required: function () {
-<<<<<<< HEAD
-        if (this.role !== "staff") {
-          return false;
-        }
-
-        return (
-          ["bank", "supermarket", "hospital", "company"].includes(
-            String(this.tenantType || "").trim().toLowerCase()
-          )
-        );
-=======
         const needsOrg = ["staff", "doctor"].includes(this.role);
         const isSharedTenant = ["bank", "supermarket", "hospital", "company"].includes(
           String(this.tenantType || "").trim().toLowerCase()
         );
         return needsOrg && isSharedTenant;
->>>>>>> main
       },
     },
 
@@ -117,11 +98,7 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       default: null,
       required: function () {
-<<<<<<< HEAD
-        return this.role === "staff";
-=======
         return this.role === "staff" || this.role === "doctor";
->>>>>>> main
       },
     },
 
@@ -130,11 +107,7 @@ const userSchema = new mongoose.Schema(
       default: null,
       trim: true,
       required: function () {
-<<<<<<< HEAD
-        return this.role === "staff";
-=======
         return this.role === "staff" || this.role === "doctor";
->>>>>>> main
       },
     },
 
