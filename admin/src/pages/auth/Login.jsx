@@ -8,7 +8,7 @@ const LOGIN_TYPES = {
   DEFAULT: "default",
   POLICE_SUPER_ADMIN: "police_super_admin",
   HOSPITAL_SUPER_ADMIN: "hospital_super_admin",
-  COMPANY_SUPER_ADMIN: "company_super_admin",
+  BANK_SUPER_ADMIN: "bank_super_admin",
   ORGANIZATION_ADMIN: "organization_admin",
   BRANCH_ADMIN: "branch_admin",
   STAFF: "staff",
@@ -36,13 +36,13 @@ const DUMMY_USERS = {
     organizationId: "org_hospital_001",
   },
   
-  // Company Super Admin - /company-login
-  "companyadmin@gmail.com": {
+  // Bank Super Admin - /bank-login
+  "bankadmin@gmail.com": {
     password: "123456",
-    name: "Company Admin",
-    role: "company_super_admin",
-    tenantType: "company",
-    organizationId: "org_company_001",
+    name: "Bank Admin",
+    role: "bank_super_admin",
+    tenantType: "bank",
+    organizationId: "org_bank_001",
   },
   
   // Shared organization-admin panel - bank tenant - /admin-login
@@ -116,10 +116,10 @@ const LOGIN_CONFIG = {
     subtitle: "Manage hospitals and healthcare services",
     subtitle2: "Demo: hospitaladmin@gmail.com / 123456",
   },
-  [LOGIN_TYPES.COMPANY_SUPER_ADMIN]: {
-    title: "Company Super Admin Login",
-    subtitle: "Manage companies and organizations",
-    subtitle2: "Demo: companyadmin@gmail.com / 123456",
+  [LOGIN_TYPES.BANK_SUPER_ADMIN]: {
+    title: "Bank Super Admin Login",
+    subtitle: "Manage banks and financial institutions",
+    subtitle2: "Demo: bankadmin@gmail.com / 123456",
   },
   [LOGIN_TYPES.ORGANIZATION_ADMIN]: {
     title: "Organization Admin Login",
@@ -144,14 +144,14 @@ const LOGIN_CONFIG = {
   [LOGIN_TYPES.DEFAULT]: {
     title: "Admin Login",
     subtitle: "Select admin type or use general login",
-    subtitle2: "Demo: companyadmin@gmail.com / 123456",
+    subtitle2: "Demo: bankadmin@gmail.com / 123456",
   },
 };
 
 const ALLOWED_ROLES_BY_LOGIN_TYPE = {
   [LOGIN_TYPES.POLICE_SUPER_ADMIN]: ["police_super_admin"],
   [LOGIN_TYPES.HOSPITAL_SUPER_ADMIN]: ["hospital_super_admin"],
-  [LOGIN_TYPES.COMPANY_SUPER_ADMIN]: ["company_super_admin"],
+  [LOGIN_TYPES.BANK_SUPER_ADMIN]: ["bank_super_admin"],
   [LOGIN_TYPES.ORGANIZATION_ADMIN]: ["organization_admin"],
   [LOGIN_TYPES.BRANCH_ADMIN]: ["branch_admin"],
   [LOGIN_TYPES.STAFF]: ["staff"],
@@ -240,6 +240,8 @@ export default function Login({ loginType = LOGIN_TYPES.DEFAULT }) {
         id: user.id,
         email: user.email,
         name: user.name,
+        username: user.username,
+        phone: user.phone,
         role: user.role,
         tenantType: user.tenantType,
         organizationId: user.organizationId,

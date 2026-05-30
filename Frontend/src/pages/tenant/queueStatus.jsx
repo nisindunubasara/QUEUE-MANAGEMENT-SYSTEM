@@ -34,54 +34,57 @@ export default function QueueStatus() {
 
   useEffect(() => {
     let isMounted = true;
+    let intervalId; // Timer එක save කරගන්න variable එකක්
 
-    const loadTrackedToken = async () => {
+    // isBackground කියන parameter එකෙන් අපි කියනවා මේක auto refresh වෙන වෙලාවක්ද කියලා
+    // එතකොට හැම තත්පර 10කට සැරයක්ම Loading screen එක ඇවිත් blink වෙන එක නවත්වන්න පුළුවන්
+    const loadTrackedToken = async (isBackground = false) => {
       try {
-        setLoading(true);
+        if (!isBackground) setLoading(true); // පළමු වතාවේ විතරක් Loading එක පෙන්නන්න
         setError("");
-        // If tokenId is provided in the URL, prefer it (tokenId represents tokenNumber)
+        
         const urlTokenNumber = tokenId ? String(tokenId) : null;
+        let tokenToTrack = urlTokenNumber;
 
-        if (urlTokenNumber) {
-          const trackedToken = await trackQueueTokenByNumber(urlTokenNumber);
-          if (!isMounted) return;
-          setTokenData(trackedToken || null);
-          return;
+        if (!tokenToTrack) {
+          tokenToTrack = getStoredTokenNumber(tenantType);
         }
 
-        // Fallback to stored token number when URL param is not provided
-        const tokenNumber = getStoredTokenNumber(tenantType);
-        if (!tokenNumber) {
+        if (!tokenToTrack) {
           if (isMounted) setTokenData(null);
           return;
         }
 
-        const trackedToken = await trackQueueTokenByNumber(tokenNumber);
-        if (!isMounted) {
-          return;
-        }
-
+        const trackedToken = await trackQueueTokenByNumber(tokenToTrack);
+        
+        if (!isMounted) return;
         setTokenData(trackedToken || null);
+        
       } catch (err) {
-        if (!isMounted) {
-          return;
-        }
-
+        if (!isMounted) return;
         setError(err?.response?.data?.message || err?.message || "Failed to load queue status");
         setTokenData(null);
       } finally {
-        if (isMounted) {
-          setLoading(false);
+        if (isMounted && !isBackground) {
+          setLoading(false); // පළමු වතාවේ විතරක් loading false කරන්න
         }
       }
     };
 
+    // 1. Component එක load වෙද්දී පළමු වතාවට data ගන්නවා
     loadTrackedToken();
 
+    // 2. තත්පර 10කට (10000ms) වරක් auto refresh වෙන්න Timer එකක් හදනවා
+    intervalId = setInterval(() => {
+      loadTrackedToken(true); // true යවන්නේ මේක background update එකක් කියලා අඳුරගන්න
+    }, 10000); 
+
+    // Component එකෙන් අයින් වෙද්දී Timer එක stop කරනවා (Memory leaks නොවෙන්න)
     return () => {
       isMounted = false;
+      clearInterval(intervalId);
     };
-  }, [tenantType]);
+  }, [tenantType, tokenId]); // tokenId එකත් dependency array එකට දාන එක හොඳයි
 
   const status = tokenData?.status || "Waiting";
   const statusMeta = statusConfig[status] || statusConfig.Waiting;
@@ -192,8 +195,8 @@ export default function QueueStatus() {
           </div>
 
           <div>
-            <p className="text-sm text-white/90">Estimated Wait</p>
-            <h2 className="mt-2 text-2xl font-bold">{tokenData.estimatedWait}</h2>
+            <p className="text-sm text-white/90">Expected Arrival Time</p>
+            <h2 className="mt-2 text-2xl font-bold">{tokenData.expectedArrivalTime}</h2>
           </div>
         </div>
       </div>

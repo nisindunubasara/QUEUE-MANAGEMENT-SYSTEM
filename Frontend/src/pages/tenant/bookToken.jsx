@@ -12,6 +12,7 @@ export default function BookToken() { // <-- මෙතනින් function එ�
   const navigate = useNavigate();
   const location = useLocation();
   const canGenerateToken = Boolean(selectedBranch?.id && selectedService?.id);
+  const today = new Date().toISOString().split("T")[0];
 
   // Auth check
   const token = localStorage.getItem("token");
@@ -37,6 +38,7 @@ export default function BookToken() { // <-- මෙතනින් function එ�
   const [formData, setFormData] = useState({
     fullName: "",
     mobile: "07",
+    bookingDate: today,
     note: "",
   });
   const [generatedTokenData, setGeneratedTokenData] = useState(null);
@@ -102,6 +104,7 @@ export default function BookToken() { // <-- මෙතනින් function එ�
         serviceId: selectedService.id,
         fullName: formData.fullName,
         mobile: formData.mobile,
+        bookingDate: formData.bookingDate,
         note: formData.note,
         userId: user?._id || user?.id,
       });
@@ -132,6 +135,7 @@ export default function BookToken() { // <-- මෙතනින් function එ�
     setFormData({
       fullName: "",
       mobile: "07",
+      bookingDate: today,
       note: "",
     });
     setGeneratedTokenData(null);
@@ -235,6 +239,19 @@ export default function BookToken() { // <-- මෙතනින් function එ�
                 value={formData.mobile}
                 onChange={handleChange}
                 placeholder="X XXX XXXX"
+                className={`w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:ring-4 ${theme?.ring || "focus:ring-blue-100"}`}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Booking Date</label>
+              <input
+                type="date"
+                name="bookingDate"
+                min={today}
+                value={formData.bookingDate}
+                onChange={handleChange}
                 className={`w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:ring-4 ${theme?.ring || "focus:ring-blue-100"}`}
                 required
               />

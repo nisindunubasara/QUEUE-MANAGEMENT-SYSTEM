@@ -22,10 +22,10 @@ export const createHospitalBranch = async (branchData) => {
 };
 
 /**
- * Create a bank or supermarket branch via the company hierarchy endpoint.
+ * Create a bank or supermarket branch via the Bank hierarchy endpoint.
  * Backend enforces organization scope from authenticated organization_admin user.
  */
-export const createCompanyBranch = async (branchData) => {
+export const createBankBranch = async (branchData) => {
   return createBranch(branchData);
 };
 

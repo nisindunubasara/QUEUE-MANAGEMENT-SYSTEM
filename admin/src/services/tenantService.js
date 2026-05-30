@@ -1,8 +1,8 @@
 import api from "./api";
 
-const ALLOWED_TENANT_TYPES = new Set(["police", "hospital", "bank", "supermarket"]);
+const ALLOWED_TENANT_TYPES = new Set(["police", "hospital", "bank"]);
 const ORGANIZATION_ADMIN_ROLE = "organization_admin";
-const ALL_SHARED_TENANTS = ["bank", "supermarket", "hospital", "police"];
+const ALL_SHARED_TENANTS = ["bank", "hospital", "police"];
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 

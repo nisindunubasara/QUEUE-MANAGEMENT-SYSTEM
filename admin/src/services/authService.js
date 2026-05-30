@@ -8,6 +8,8 @@ const normalizeLoginUser = (user) => {
 
   return {
     ...source,
+    username: toNullable(source.username),
+    phone: toNullable(source.phone),
     role: toNullable(source.role),
     tenantType: toNullable(source.tenantType),
     organizationId: toNullable(source.organizationId),
@@ -42,6 +44,22 @@ export const loginUser = async (payload) => {
     ...data,
     user: normalizeLoginUser(data?.user),
   };
+};
+
+export const logoutUserApi = async () => {
+  try {
+    await api.post("/auth/logout");
+  } catch (error) {
+    console.error("Logout API error:", error);
+  }
+};
+
+export const sendHeartbeatApi = async () => {
+  try {
+    await api.post("/auth/heartbeat");
+  } catch (error) {
+    console.error("Heartbeat error:", error);
+  }
 };
 
 export function getStoredAuthState() {

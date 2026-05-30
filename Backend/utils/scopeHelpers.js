@@ -1,7 +1,7 @@
 const LEGACY_SUPER_ADMIN_ROLES = new Set([
   "police_super_admin",
   "hospital_super_admin",
-  "company_super_admin",
+  "bank_super_admin",
 ]);
 
 const normalizeText = (value = "") => String(value || "").trim().toLowerCase();

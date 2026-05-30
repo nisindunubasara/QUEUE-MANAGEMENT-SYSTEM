@@ -34,8 +34,6 @@ export default function Navbar({ tenant, tenantType }) {
 
   const defaultNavLinks = [
     { label: "Home", to: `/${tenantType}`, end: true },
-    { label: "Branches", to: `/${tenantType}/branches`, onClick: clearQueueFlow },
-    { label: "Services", to: `/${tenantType}/services`, onClick: clearQueueFlow },
     { label: "Book Token", to: `/${tenantType}/book-token` },
     { label: "Queue Status", to: `/${tenantType}/queue-status` },
     { label: "Notifications", to: `/${tenantType}/notifications` },

@@ -337,7 +337,7 @@ export const getOrganizationBranchServices = async (req, res) => {
     }
 
     const branches = await Branch.find(branchScopeFilter)
-      .select("_id branchName")
+      .select("_id branchName services")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -351,6 +351,18 @@ export const getOrganizationBranchServices = async (req, res) => {
       .select("_id branchIds serviceName description status createdAt")
       .sort({ createdAt: -1 })
       .lean();
+
+    const branchServiceStatusMap = {};
+    for (const branch of branches) {
+      branchServiceStatusMap[String(branch._id)] = {};
+      if (Array.isArray(branch.services)) {
+        for (const bs of branch.services) {
+          if (bs.serviceId) {
+            branchServiceStatusMap[String(branch._id)][String(bs.serviceId)] = bs.status || "active";
+          }
+        }
+      }
+    }
 
     // Prepare map of branchId -> services
     const servicesByBranchId = new Map();
@@ -367,7 +379,7 @@ export const getOrganizationBranchServices = async (req, res) => {
             branchIds: linkedBranchIds,
             serviceName: service.serviceName,
             description: service.description || "",
-            status: service.status,
+            status: branchServiceStatusMap[bId]?.[String(service._id)] || service.status,
             createdAt: service.createdAt,
           });
         }

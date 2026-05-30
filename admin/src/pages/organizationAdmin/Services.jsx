@@ -54,38 +54,82 @@ export default function SharedOrganizationAdminServices() {
       }));
   });
 
+  const groupedServices = branches.reduce((accumulator, branch) => {
+    const services = Array.isArray(branch.services)
+      ? branch.services
+      : Array.isArray(branch.branchServices)
+        ? branch.branchServices
+        : [];
+
+    services
+      .filter((service) => !Boolean(service?.isDivisionService))
+      .forEach((service) => {
+        const serviceName = service?.serviceName || "Unnamed Service";
+
+        if (!accumulator[serviceName]) {
+          accumulator[serviceName] = {
+            serviceName,
+            description: service?.description || "-",
+            branches: [],
+          };
+        }
+
+        accumulator[serviceName].branches.push({
+          branchName: branch.branchName || "Unnamed Branch",
+          description: service?.description || "-",
+          status: service?.status,
+        });
+      });
+
+    return accumulator;
+  }, {});
+
   useEffect(() => {
     let isMounted = true;
 
-    const loadBranchServices = async () => {
+    const loadBranchServices = async (isInitialLoad = false) => {
       try {
-        setLoading(true);
-        setError("");
+        if (isInitialLoad) {
+          setLoading(true);
+        }
+
+        if (isMounted) {
+          setError("");
+        }
 
         const data = await getOrganizationBranchServices();
         if (!isMounted) {
           return;
         }
 
-        setBranches(Array.isArray(data) ? data : []);
+        if (isMounted) {
+          setBranches(Array.isArray(data) ? data : []);
+        }
       } catch (err) {
         if (!isMounted) {
           return;
         }
 
-        setError(err?.message || "Failed to load services");
-        setBranches([]);
-      } finally {
         if (isMounted) {
+          setError(err?.message || "Failed to load services");
+          setBranches([]);
+        }
+      } finally {
+        if (isMounted && isInitialLoad) {
           setLoading(false);
         }
       }
     };
 
-    loadBranchServices();
+    loadBranchServices(true);
+
+    const intervalId = setInterval(() => {
+      loadBranchServices(false);
+    }, 5000);
 
     return () => {
       isMounted = false;
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -173,57 +217,49 @@ export default function SharedOrganizationAdminServices() {
 
       {!loading &&
         !error &&
-        branches.map((branch) => {
-          const services = Array.isArray(branch.services)
-            ? branch.services
-            : Array.isArray(branch.branchServices)
-              ? branch.branchServices
-              : [];
+        Object.values(groupedServices).map((group) => (
+          <section
+            key={group.serviceName}
+            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
+            <h2 className="text-xl font-semibold text-slate-900">{group.serviceName}</h2>
+            <p className="mt-1 mb-4 text-sm text-slate-500">{group.description || "-"}</p>
 
-          const branchServices = services.filter((service) => !Boolean(service?.isDivisionService));
-
-          return (
-            <section key={branch.branchId} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-slate-900">{branch.branchName || "Unnamed Branch"}</h2>
-
-              {branchServices.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">No services for this branch</p>
-              ) : (
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="px-4 py-3 text-left font-semibold text-slate-900">Service Name</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-900">Description</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-900">Status</th>
+            {group.branches.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">No branches offer this service</p>
+            ) : (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Branch Name</th>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.branches.map((branch, index) => (
+                      <tr
+                        key={`${group.serviceName}_${branch.branchName}_${index}`}
+                        className="border-b border-slate-100 hover:bg-slate-50"
+                      >
+                        <td className="px-4 py-3 font-medium text-slate-900">{branch.branchName}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(
+                              branch.status
+                            )}`}
+                          >
+                            {formatStatusLabel(branch.status)}
+                          </span>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {branchServices.map((service) => (
-                        <tr
-                          key={service.id || service.serviceId || `${branch.branchId}_${service.serviceName}`}
-                          className="border-b border-slate-100 hover:bg-slate-50"
-                        >
-                          <td className="px-4 py-3 font-medium text-slate-900">{service.serviceName || "-"}</td>
-                          <td className="px-4 py-3 text-slate-600">{service.description || "-"}</td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(
-                                service.status
-                              )}`}
-                            >
-                              {formatStatusLabel(service.status)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          );
-        })}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ))}
     </div>
   );
 }

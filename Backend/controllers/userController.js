@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Branch from "../models/Branch.js";
+import Organization from "../models/Organization.js";
 import {
   getBranchScope,
   getOrganizationScope,
@@ -20,7 +21,7 @@ const COMMON_TENANT_TYPES = new Set(["police", "hospital", "bank", "supermarket"
 const LEGACY_ROLE_TENANT_ACCESS = {
   police_super_admin: ["police"],
   hospital_super_admin: ["hospital"],
-  company_super_admin: ["bank", "supermarket"],
+  bank_super_admin: ["bank", "supermarket"],
 };
 
 const REGISTRATION_ALLOWED_DB_ROLES = new Set([
@@ -30,7 +31,7 @@ const REGISTRATION_ALLOWED_DB_ROLES = new Set([
   "staff",
   "hospital_super_admin",
   "police_super_admin",
-  "company_super_admin",
+  "bank_super_admin",
   "police_division_admin",
   "police_branch_admin",
   "police_staff",
@@ -56,6 +57,38 @@ const buildUserResponse = (user) => ({
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
+
+const updateScopeStatusIfNeeded = async (userId, user = {}, status) => {
+  if (user.role === "branch_admin" && user.branchId) {
+    const onlineCount = await User.countDocuments({
+      branchId: user.branchId,
+      role: "branch_admin",
+      isOnline: true,
+      _id: { $ne: userId },
+    });
+
+    if (status === "active") {
+      await Branch.updateOne({ _id: user.branchId }, { $set: { status: "active" } });
+    } else if (onlineCount === 0) {
+      await Branch.updateOne({ _id: user.branchId }, { $set: { status: "inactive" } });
+    }
+  }
+
+  if (user.role === "organization_admin" && user.organizationId) {
+    const onlineCount = await User.countDocuments({
+      organizationId: user.organizationId,
+      role: "organization_admin",
+      isOnline: true,
+      _id: { $ne: userId },
+    });
+
+    if (status === "active") {
+      await Organization.updateOne({ _id: user.organizationId }, { $set: { status: "active" } });
+    } else if (onlineCount === 0) {
+      await Organization.updateOne({ _id: user.organizationId }, { $set: { status: "inactive" } });
+    }
+  }
+};
 
 const getRequesterAllowedTenantTypes = (reqUser = {}) => {
   if (!isSuperAdmin(reqUser)) {
@@ -90,12 +123,12 @@ const resolveOrganizationAdminTenantType = (req) => {
     };
   }
 
-  // Company legacy super-admin can manage both bank and supermarket, so tenantType may be required.
-  if (role === "company_super_admin" && !bodyTenantType) {
+  // Bank legacy super-admin can manage both bank and supermarket, so tenantType may be required.
+  if (role === "bank_super_admin" && !bodyTenantType) {
     return {
       error: {
         statusCode: 400,
-        message: "tenantType is required for company_super_admin and must be bank or supermarket",
+        message: "tenantType is required for bank_super_admin and must be bank or supermarket",
       },
     };
   }
@@ -533,10 +566,10 @@ export const loginUser = async (req, res) => {
         tenantType: "hospital",
       },
       {
-        email: process.env.COMPANY_ADMIN_EMAIL,
-        password: process.env.COMPANY_ADMIN_PASSWORD,
-        role: "company_super_admin",
-        tenantType: "company",
+        email: process.env.BANK_ADMIN_EMAIL,
+        password: process.env.BANK_ADMIN_PASSWORD,
+        role: "bank_super_admin",
+        tenantType: "bank",
       },
       {
         email: process.env.SUPER_ADMIN_EMAIL,
@@ -604,6 +637,16 @@ export const loginUser = async (req, res) => {
       status: user.status || null,
     };
 
+    user.isOnline = true;
+    user.lastPingAt = new Date();
+    await user.save();
+
+    if (user.role === "branch_admin" && user.branchId) {
+      await Branch.findByIdAndUpdate(user.branchId, { status: "active" });
+    } else if (user.role === "organization_admin" && user.organizationId) {
+      await Organization.findByIdAndUpdate(user.organizationId, { status: "active" });
+    }
+
     const token = jwt.sign(userPayload, jwtSecret, { expiresIn: "7d" });
 
     return successResponse(res, 200, "Login successful", {
@@ -618,6 +661,138 @@ export const loginUser = async (req, res) => {
   }
 };
 
+export const logoutUser = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return successResponse(res, 200, "Logged out");
+    }
+
+    const currentUser = await User.findById(req.user.id || req.user._id);
+    if (!currentUser) {
+      return successResponse(res, 200, "Logged out");
+    }
+
+    currentUser.isOnline = false;
+    currentUser.status = "inactive";
+    await currentUser.save();
+
+    if (currentUser.role === "branch_admin" && currentUser.branchId) {
+      const onlineCount = await User.countDocuments({ branchId: currentUser.branchId, role: "branch_admin", isOnline: true });
+      if (onlineCount === 0) await Branch.findByIdAndUpdate(currentUser.branchId, { status: "inactive" });
+    } else if (currentUser.role === "organization_admin" && currentUser.organizationId) {
+      const onlineCount = await User.countDocuments({ organizationId: currentUser.organizationId, role: "organization_admin", isOnline: true });
+      if (onlineCount === 0) await Organization.findByIdAndUpdate(currentUser.organizationId, { status: "inactive" });
+    }
+
+    return successResponse(res, 200, "Logout successful", {});
+  } catch (error) {
+    console.error("logoutUser error:", error);
+    return errorResponse(res, 500, "Logout error");
+  }
+};
+
+export const heartbeat = async (req, res) => {
+  try {
+    if (req.user && req.user.id) {
+      await User.findByIdAndUpdate(req.user.id, { isOnline: true, lastPingAt: new Date(), status: "active" });
+    }
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ success: false });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    if (!req.user) {
+      return errorResponse(res, 401, "User authentication required");
+    }
+
+    const userId = req.user.id;
+    if (!userId || !isValidObjectId(userId)) {
+      return errorResponse(res, 400, "Invalid user ID");
+    }
+
+    const { name, phone, username, email, currentPassword, newPassword, password } = req.body || {};
+    const updateData = {};
+
+    // Update name if provided
+    if (name) {
+      updateData.name = normalizeText(name);
+    }
+
+    // Update phone if provided
+    if (phone) {
+      updateData.phone = normalizeText(phone);
+    }
+
+    // Check if email is being changed and verify it's not already taken
+    if (email) {
+      const normalizedNewEmail = normalizeEmail(email);
+      const existingUserWithEmail = await User.findOne({ email: normalizedNewEmail });
+
+      if (existingUserWithEmail && String(existingUserWithEmail._id) !== String(userId)) {
+        return errorResponse(res, 409, "Email already exists");
+      }
+
+      updateData.email = normalizedNewEmail;
+    }
+
+    // Check if username is being changed and verify it's not already taken
+    if (username) {
+      const normalizedNewUsername = normalizeText(username);
+      const existingUserWithUsername = await User.findOne({ username: normalizedNewUsername });
+
+      if (existingUserWithUsername && String(existingUserWithUsername._id) !== String(userId)) {
+        return errorResponse(res, 409, "Username already exists");
+      }
+
+      updateData.username = normalizedNewUsername;
+    }
+
+    // Hash and update password if provided
+    const nextPassword = newPassword || password;
+    if (nextPassword) {
+      if (!currentPassword) {
+        return errorResponse(res, 400, "Current password is incorrect");
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return errorResponse(res, 404, "User not found");
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(String(currentPassword), String(user.password || ""));
+      if (!isCurrentPasswordValid) {
+        return errorResponse(res, 401, "Current password is incorrect");
+      }
+
+      const hashedPassword = await bcrypt.hash(String(nextPassword), 10);
+      updateData.password = hashedPassword;
+    }
+
+    // If no fields to update, return early
+    if (Object.keys(updateData).length === 0) {
+      return errorResponse(res, 400, "No fields to update");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+    if (!updatedUser) {
+      return errorResponse(res, 404, "User not found");
+    }
+
+    return successResponse(res, 200, "Profile updated successfully", {
+      user: buildUserResponse(updatedUser),
+    });
+  } catch (error) {
+    console.error("updateProfile error:", error);
+    return errorResponse(res, 500, "Server error while updating profile", {
+      error: error?.message || error,
+    });
+  }
+};
+
 // Legacy aliases kept for migration safety and routed to common handlers.
 export const createHospitalOrganizationAdmin = async (req, res) => {
   req.body = {
@@ -627,18 +802,41 @@ export const createHospitalOrganizationAdmin = async (req, res) => {
   return createOrganizationAdmin(req, res);
 };
 
-export const createCompanyOrganizationAdmin = async (req, res) => {
+export const createBankOrganizationAdmin = async (req, res) => {
   req.body = {
     ...(req.body || {}),
-    // company_super_admin can create both bank and supermarket organization_admin users.
+    // bank_super_admin can create both bank and supermarket organization_admin users.
     tenantType: normalizeTenantType(req.body?.tenantType),
   };
   return createOrganizationAdmin(req, res);
 };
 
 export const createHospitalBranchAdmin = async (req, res) => createBranchAdmin(req, res);
-export const createCompanyBranchAdmin = async (req, res) => createBranchAdmin(req, res);
+export const createBankBranchAdmin = async (req, res) => createBranchAdmin(req, res);
 export const createHospitalStaffUser = async (req, res) => createStaffUser(req, res);
-export const createCompanyBranchStaffUser = async (req, res) => createStaffUser(req, res);
+export const createBankBranchStaffUser = async (req, res) => createStaffUser(req, res);
 
 export const getAllUsers = getUsers;
+
+setInterval(async () => {
+  try {
+    const fiveMinsAgo = new Date(Date.now() - 40 * 60 * 1000);
+    const offlineUsers = await User.find({ isOnline: true, lastPingAt: { $lt: fiveMinsAgo } });
+
+    for (const user of offlineUsers) {
+      user.isOnline = false;
+      user.status = "inactive";
+      await user.save();
+
+      if (user.role === "branch_admin" && user.branchId) {
+        const onlineCount = await User.countDocuments({ branchId: user.branchId, role: "branch_admin", isOnline: true });
+        if (onlineCount === 0) await Branch.findByIdAndUpdate(user.branchId, { status: "inactive" });
+      } else if (user.role === "organization_admin" && user.organizationId) {
+        const onlineCount = await User.countDocuments({ organizationId: user.organizationId, role: "organization_admin", isOnline: true });
+        if (onlineCount === 0) await Organization.findByIdAndUpdate(user.organizationId, { status: "inactive" });
+      }
+    }
+  } catch (err) {
+    console.error("Heartbeat job error:", err);
+  }
+}, 60 * 1000);

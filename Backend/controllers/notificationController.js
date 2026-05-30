@@ -1,4 +1,5 @@
 import Notification from "../models/Notification.js";
+import axios from "axios";
 
 // Notification එකක් create කරන පොදු function එක
 export const createNotification = async ({ tenantType, tokenNumber, title, message, type, module, userId }) => {
@@ -64,4 +65,35 @@ export const markAllAsRead = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+export const sendSMS = async (phoneNumber, message) => {
+   try {
+      if (!phoneNumber) return; 
+
+      // Notify.lk එකට ගැළපෙන්න + ලකුණ තියෙනවා නම් ඒක අයින් කරනවා
+      // (උදා: +9477... වෙනුවට 9477... විදියට යවනවා)
+      const formattedNumber = phoneNumber.replace('+', '');
+
+      const response = await axios.post(
+         "https://app.notify.lk/api/v1/send",
+         {
+            user_id: process.env.NOTIFY_USER_ID,
+            api_key: process.env.NOTIFY_API_KEY,
+            sender_id: process.env.NOTIFY_SENDER_ID, 
+            to: formattedNumber,
+            message: message,
+         }
+      );
+      
+      // Notify.lk එකෙන් success කියලා ආවොත්
+      if(response.data && response.data.status === "success") {
+         console.log(`✅ Notify.lk SMS sent successfully to: ${phoneNumber}`);
+      } else {
+         console.log("⚠️ Notify.lk warning/error:", response.data);
+      }
+
+   } catch (error) {
+      console.error("❌ Notify.lk SMS error:", error.response?.data || error.message);
+   }
 };

@@ -1,10 +1,14 @@
 import mongoose from "mongoose";
 
+import "dotenv/config";
+
+
+
 const workSessionSchema = new mongoose.Schema(
   {
     tenantType: {
       type: String,
-      enum: ["police", "bank", "supermarket", "hospital", "company"],
+      enum: ["police", "bank", "hospital"],
       required: true,
       trim: true,
       index: true,
@@ -119,6 +123,8 @@ workSessionSchema.pre("validate", function () {
 workSessionSchema.index({ branchId: 1, staffId: 1, status: 1, startedAt: -1 });
 workSessionSchema.index({ tenantType: 1, organizationId: 1, branchId: 1, startedAt: -1 });
 workSessionSchema.index({ tenantType: 1, divisionId: 1, branchId: 1, startedAt: -1 });
+
+
 
 const WorkSession = mongoose.model("WorkSession", workSessionSchema);
 

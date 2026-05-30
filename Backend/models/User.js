@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import "dotenv/config";
+
+
 
 const userSchema = new mongoose.Schema(
   {
@@ -43,7 +46,7 @@ const userSchema = new mongoose.Schema(
         "staff",
         "hospital_super_admin",
         "police_super_admin",
-        "company_super_admin",
+        "bank_super_admin",
         "police_division_admin",
         "police_branch_admin",
         "police_staff",
@@ -54,7 +57,7 @@ const userSchema = new mongoose.Schema(
 
     tenantType: {
       type: String,
-      enum: ["hospital", "police", "bank", "supermarket","company", null],
+      enum: ["hospital", "police", "bank", null],
       default: null,
       required: function () {
         return this.role === "staff" || this.role === "doctor";
@@ -66,7 +69,7 @@ const userSchema = new mongoose.Schema(
       default: null,
       required: function () {
         const needsOrg = ["staff", "doctor"].includes(this.role);
-        const isSharedTenant = ["bank", "supermarket", "hospital", "company"].includes(
+        const isSharedTenant = ["bank", "hospital"].includes(
           String(this.tenantType || "").trim().toLowerCase()
         );
         return needsOrg && isSharedTenant;
@@ -115,6 +118,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive", "pending"],
       default: "active",
+    },
+
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+
+    lastPingAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

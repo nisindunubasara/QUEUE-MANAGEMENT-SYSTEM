@@ -1,9 +1,9 @@
 import express from "express";
 import {
 	createBranchAdmin,
-	createCompanyBranchAdmin,
-	createCompanyBranchStaffUser,
-	createCompanyOrganizationAdmin,
+	createBankBranchAdmin,
+	createBankBranchStaffUser,
+	createBankOrganizationAdmin,
 	createHospitalBranchAdmin,
 	createHospitalOrganizationAdmin,
 	createHospitalStaffUser,
@@ -29,9 +29,9 @@ userRouter.get("/", authMiddleware, getUsers);
 
 // Legacy aliases kept for migration safety.
 userRouter.get("/list", authMiddleware, getAllUsers);
-userRouter.post("/company/organization-admins", authMiddleware, createCompanyOrganizationAdmin);
-userRouter.post("/company/branch-admins", authMiddleware, createCompanyBranchAdmin);
-userRouter.post("/company/staff", authMiddleware, createCompanyBranchStaffUser);
+userRouter.post("/bank/organization-admins", authMiddleware, createBankOrganizationAdmin);
+userRouter.post("/bank/branch-admins", authMiddleware, createBankBranchAdmin);
+userRouter.post("/bank/staff", authMiddleware, createBankBranchStaffUser);
 userRouter.post("/hospital/organization-admins", authMiddleware, createHospitalOrganizationAdmin);
 userRouter.post("/hospital/branch-admins", authMiddleware, createHospitalBranchAdmin);
 userRouter.post("/hospital/staff", authMiddleware, createHospitalStaffUser);

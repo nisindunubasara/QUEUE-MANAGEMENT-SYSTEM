@@ -72,13 +72,6 @@ export const createCounter = async (req, res) => {
         });
       }
 
-      const serviceOrganizationId = service.organizationId || null;
-      if (organizationId && serviceOrganizationId && String(serviceOrganizationId) !== String(organizationId)) {
-        return res.status(403).json({
-          success: false,
-          message: "Selected service does not belong to your organization scope",
-        });
-      }
     }
     // --------------------------------------------------
 

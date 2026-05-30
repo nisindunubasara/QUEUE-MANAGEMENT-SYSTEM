@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+import "dotenv/config";
+
 // Shared parent model for all tenants.
 // Police tenants are stored here as regular organizations with optional
 // police-specific metadata (for example divisionName, district, province, category).
@@ -139,6 +141,8 @@ const organizationSchema = new mongoose.Schema(
 
 organizationSchema.index({ tenantType: 1, organizationName: 1 });
 organizationSchema.index({ tenantType: 1, city: 1, status: 1 });
+
+
 
 const Organization = mongoose.model("Organization", organizationSchema);
 

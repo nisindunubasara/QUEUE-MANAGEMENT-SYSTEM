@@ -140,3 +140,13 @@ export const cancelToken = async (tokenId) => {
     throw error.response?.data || { success: false, message: "Error cancelling token" };
   }
 };
+
+export const updateUserProfile = async (payload) => {
+  try {
+    const response = await api.patch("/auth/profile", payload);
+    return response.data;
+  } catch (error) {
+    console.error("updateUserProfile error:", error.response?.data || error.message);
+    throw error.response?.data || { success: false, message: "Error updating user profile" };
+  }
+};

@@ -53,7 +53,7 @@ export const getUserBranches = async (req, res) => {
 
     const query = {
       tenantType,
-      status: "active",
+      status: { $in: ["active", "inactive"] },
     };
 
     if (organization) {
@@ -111,9 +111,9 @@ export const getUserServices = async (req, res) => {
     const branch = await Branch.findOne({
       _id: branchId,
       tenantType,
-      status: "active",
+      status: { $in: ["active", "inactive"] },
     })
-      .select("_id")
+      .select("_id services")
       .lean();
 
     if (!branch) {
@@ -123,9 +123,19 @@ export const getUserServices = async (req, res) => {
       });
     }
 
+    const activeBranchServiceIds = [];
+    if (Array.isArray(branch.services)) {
+      for (const bs of branch.services) {
+        // Only include services that are explicitly active or not marked as inactive
+        if (bs.serviceId && bs.status !== "inactive") {
+          activeBranchServiceIds.push(String(bs.serviceId));
+        }
+      }
+    }
+
     const services = await Service.find({
+      _id: { $in: activeBranchServiceIds },
       tenantType,
-      branchIds: { $in: [branchId] },
       status: "active",
     })
       .select("_id serviceName")

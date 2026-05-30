@@ -45,8 +45,22 @@ export const getServiceIdCode = (serviceId) => {
   }
 };
 
-export const buildTokenPrefix = ({ tenantType, organization, city, service, serviceId }) => {
-  return `${getTenantCode(tenantType)}${getOrganizationCode(organization)}${getBranchCode(city)}${getServiceCode(service)}${getServiceIdCode(serviceId)}`;
+export const buildTokenPrefix = ({ tenantType, organization, city, service, serviceId, bookingDate }) => {
+  const basePrefix = `${getTenantCode(tenantType)}${getOrganizationCode(organization)}${getBranchCode(city)}${getServiceCode(service)}${getServiceIdCode(serviceId)}`;
+
+  if (!bookingDate) {
+    return basePrefix;
+  }
+
+  const dateParts = String(bookingDate).trim().split("-");
+  if (dateParts.length !== 3) {
+    return basePrefix;
+  }
+
+  const [year, month, day] = dateParts;
+  const suffix = `${String(year).slice(-2)}${String(month).padStart(2, "0")} ${String(day).padStart(2, "0")}`.replace(/\s+/g, "");
+
+  return `${basePrefix}-${suffix}`;
 };
 
 export const formatSequenceNumber = (sequenceNumber) => String(sequenceNumber).padStart(5, "0");

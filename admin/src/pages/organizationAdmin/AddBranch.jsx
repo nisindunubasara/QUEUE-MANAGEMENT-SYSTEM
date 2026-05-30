@@ -22,7 +22,7 @@ export default function AddBranch() {
   const navigate = useNavigate();
   const { tenantType } = useAuth();
   const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
-  const isCompanyTenant = ["bank", "supermarket"].includes(normalizedTenantType);
+  const isBankTenant = ["bank"].includes(normalizedTenantType);
   const isHospitalTenant = normalizedTenantType === "hospital";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,6 +35,7 @@ export default function AddBranch() {
     contactNumber: "",
     email: "",
     status: "active",
+    maxDailyTokens: "",
     branchAdminAccess: false,
     adminName: "",
     adminEmail: "",
@@ -93,6 +94,7 @@ export default function AddBranch() {
         contactNumber: String(formData.contactNumber || "").trim(),
         email: String(formData.email || "").trim().toLowerCase(),
         status: String(formData.status || "active").trim().toLowerCase(),
+        maxDailyTokens: Number(formData.maxDailyTokens) || 0,
         branchAdminAccess: Boolean(formData.branchAdminAccess),
         adminName: String(formData.adminName || "").trim(),
         adminEmail: String(formData.adminEmail || "").trim().toLowerCase(),
@@ -247,7 +249,7 @@ export default function AddBranch() {
           </div>
 
           {/* Status & Admin Access */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div>
               <label htmlFor="status" className="mb-1.5 block text-sm font-medium text-slate-700">
                 Status
@@ -262,6 +264,22 @@ export default function AddBranch() {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="maxDailyTokens" className="mb-1.5 block text-sm font-medium text-slate-700">
+                Max Daily Tokens
+              </label>
+              <input
+                id="maxDailyTokens"
+                name="maxDailyTokens"
+                type="number"
+                min="0"
+                value={formData.maxDailyTokens}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-4 focus:ring-sky-100"
+                placeholder="e.g., 100"
+              />
             </div>
 
             <div className="flex items-end">

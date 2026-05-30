@@ -2,7 +2,7 @@ import express from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import {
 	createBranch,
-	createCompanyBranch,
+	createBankBranch,
 	createHospitalBranch,
 	getBranchById,
 	getBranchesByOrganization,
@@ -22,6 +22,6 @@ branchRouter.patch("/:id", authMiddleware, updateBranch);
 
 // Legacy aliases kept for migration safety.
 branchRouter.post("/hospital", authMiddleware, createHospitalBranch);
-branchRouter.post("/company", authMiddleware, createCompanyBranch);
+branchRouter.post("/bank", authMiddleware, createBankBranch);
 
 export default branchRouter;

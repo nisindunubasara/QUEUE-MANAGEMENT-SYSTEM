@@ -73,7 +73,7 @@ export default function HospitalSuperAdminBranchRequests() {
 
     try {
       await approveBranchRequest(requestId);
-      await fetchRequests();
+      setRequests((prev) => prev.filter((req) => (req?._id || req?.id) !== requestId));
     } catch (err) {
       setError(err?.message || "Failed to approve branch request.");
     } finally {
@@ -87,7 +87,7 @@ export default function HospitalSuperAdminBranchRequests() {
 
     try {
       await rejectBranchRequest(requestId);
-      await fetchRequests();
+      setRequests((prev) => prev.filter((req) => (req?._id || req?.id) !== requestId));
     } catch (err) {
       setError(err?.message || "Failed to reject branch request.");
     } finally {

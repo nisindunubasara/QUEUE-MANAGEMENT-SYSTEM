@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, useState } from "react";
-import { clearAuthState, getStoredAuthState, saveAuthState } from "../services/authService";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { clearAuthState, getStoredAuthState, logoutUserApi, saveAuthState, sendHeartbeatApi } from "../services/authService";
 
 // Canonical role hierarchy (no normalization - each role is distinct).
 // organization_admin is a shared role for police, bank, supermarket, and hospital tenants.
@@ -7,7 +7,7 @@ import { clearAuthState, getStoredAuthState, saveAuthState } from "../services/a
 export const CANONICAL_ROLES = {
   POLICE_SUPER_ADMIN: "police_super_admin",
   HOSPITAL_SUPER_ADMIN: "hospital_super_admin",
-  COMPANY_SUPER_ADMIN: "company_super_admin",
+  BANK_SUPER_ADMIN: "bank_super_admin",
   ORGANIZATION_ADMIN: "organization_admin",
   BRANCH_ADMIN: "branch_admin",
   STAFF: "staff",
@@ -26,9 +26,9 @@ export const normalizeRole = (role) => {
     police_super_admin: CANONICAL_ROLES.POLICE_SUPER_ADMIN,
     hospitaladmin: CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN,
     hospital_super_admin: CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN,
-    companyadmin: CANONICAL_ROLES.COMPANY_SUPER_ADMIN,
-    company_super_admin: CANONICAL_ROLES.COMPANY_SUPER_ADMIN,
-    superadmin: CANONICAL_ROLES.COMPANY_SUPER_ADMIN,
+    bankadmin: CANONICAL_ROLES.BANK_SUPER_ADMIN,
+    bank_super_admin: CANONICAL_ROLES.BANK_SUPER_ADMIN,
+    superadmin: CANONICAL_ROLES.BANK_SUPER_ADMIN,
     organization_admin: CANONICAL_ROLES.ORGANIZATION_ADMIN,
     org_admin: CANONICAL_ROLES.ORGANIZATION_ADMIN,
     branch_admin: CANONICAL_ROLES.BRANCH_ADMIN,
@@ -46,6 +46,8 @@ const parseStoredAuth = () => {
     return { 
       user: null, 
       role: null,
+      username: null,
+      phone: null,
       tenantType: null,
       organizationId: null,
       organizationName: null,
@@ -60,6 +62,8 @@ const parseStoredAuth = () => {
   return {
     user: parsed?.user || null,
     role: normalizeRole(parsed?.role) || null,
+    username: parsed?.user?.username || parsed?.username || null,
+    phone: parsed?.user?.phone || parsed?.phone || null,
     tenantType: parsed?.tenantType || null,
     organizationId: parsed?.organizationId || null,
     organizationName: parsed?.organizationName || null,
@@ -74,6 +78,8 @@ const parseStoredAuth = () => {
 const AuthContext = createContext({
   user: null,
   role: null,
+  username: null,
+  phone: null,
   tenantType: null,
   organizationId: null,
   organizationName: null,
@@ -91,10 +97,46 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [authState, setAuthState] = useState(parseStoredAuth);
 
+  useEffect(() => {
+    // Only run if user is logged in
+    if (!authState.user) return;
+
+    // Send immediately on mount
+    sendHeartbeatApi();
+
+    // Then send every 2 minutes
+    const intervalId = setInterval(() => {
+      sendHeartbeatApi();
+    }, 2 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [authState.user]);
+
+  const updateAuthUser = (updatedData = {}) => {
+    setAuthState((prevState) => {
+      const nextUser = {
+        ...(prevState.user || {}),
+        ...updatedData,
+      };
+
+      const nextState = {
+        ...prevState,
+        user: nextUser,
+        username: updatedData.username ?? nextUser.username ?? prevState.username ?? null,
+        phone: updatedData.phone ?? nextUser.phone ?? prevState.phone ?? null,
+      };
+
+      saveAuthState(nextState);
+      return nextState;
+    });
+  };
+
   const login = ({
     id = null,
     email,
     name = null,
+    username = null,
+    phone = null,
     role,
     tenantType = null,
     organizationId = null,
@@ -109,12 +151,16 @@ export function AuthProvider({ children }) {
       id: id || Date.now().toString(),
       email,
       name: name || (email || "User").split("@")[0] || "User",
+      username: username || null,
+      phone: phone || null,
     };
 
     // Persist the shared org-admin scope alongside the role so future backend auth can isolate tenant data.
     const nextState = {
       user,
       role: normalizeRole(role),
+      username: username || null,
+      phone: phone || null,
       tenantType,
       organizationId,
       organizationName,
@@ -128,19 +174,11 @@ export function AuthProvider({ children }) {
     setAuthState(nextState);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await logoutUserApi();
     clearAuthState();
     setAuthState({ 
-      user: null, 
-      role: null,
-      tenantType: null,
-      organizationId: null,
-      organizationName: null,
-      divisionId: null,
-      divisionName: null,
-      branchId: null,
-      branchName: null,
-      status: null,
+      user: null, role: null, username: null, phone: null, tenantType: null, organizationId: null, organizationName: null, divisionId: null, divisionName: null, branchId: null, branchName: null, status: null,
     });
   };
 
@@ -152,6 +190,8 @@ export function AuthProvider({ children }) {
       return {
         user: authState.user,
         role: authState.role,
+        username: authState.username,
+        phone: authState.phone,
         tenantType: authState.tenantType,
         organizationId: authState.organizationId,
         organizationName: authState.organizationName,
@@ -164,11 +204,14 @@ export function AuthProvider({ children }) {
         hasRole,
         login,
         logout,
+        updateAuthUser,
       };
     },
     [
       authState.user,
       authState.role,
+      authState.username,
+      authState.phone,
       authState.tenantType,
       authState.organizationId,
       authState.organizationName,

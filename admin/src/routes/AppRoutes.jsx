@@ -28,17 +28,15 @@ import HospitalSuperAdminHospitalAdmins from "../pages/hospitalSuperAdmin/Hospit
 import HospitalSuperAdminBranchRequests from "../pages/hospitalSuperAdmin/BranchRequests";
 import HospitalSuperAdminReports from "../pages/hospitalSuperAdmin/Reports";
 
-// Company Super Admin
-import CompanySuperAdminDashboard from "../pages/companySuperAdmin/Dashboard";
-import CompanySuperAdminOrganizations from "../pages/companySuperAdmin/Organizations";
-import CompanySuperAdminBranches from "../pages/companySuperAdmin/Branches";
-import CompanySuperAdminAddBank from "../pages/companySuperAdmin/AddBank";
-import CompanySuperAdminAddSupermarket from "../pages/companySuperAdmin/AddSupermarket";
-import CompanySuperAdminAddBankBranch from "../pages/companySuperAdmin/AddBankBranch";
-import CompanySuperAdminAddSupermarketBranch from "../pages/companySuperAdmin/AddSupermarketBranch";
-import CompanySuperAdminOrganizationAdmins from "../pages/companySuperAdmin/OrganizationAdmins";
-import CompanySuperAdminReports from "../pages/companySuperAdmin/Reports";
-import CompanySuperAdminBranchRequests from "../pages/companySuperAdmin/BranchRequests";
+// Bank Super Admin
+import BankSuperAdminDashboard from "../pages/bankSuperAdmin/Dashboard";
+import BankSuperAdminOrganizations from "../pages/bankSuperAdmin/Organizations";
+import BankSuperAdminBranches from "../pages/bankSuperAdmin/Branches";
+import BankSuperAdminAddBank from "../pages/bankSuperAdmin/AddBank";
+import BankSuperAdminAddBankBranch from "../pages/bankSuperAdmin/AddBankBranch";
+import BankSuperAdminOrganizationAdmins from "../pages/bankSuperAdmin/OrganizationAdmins";
+import BankSuperAdminReports from "../pages/bankSuperAdmin/Reports";
+import BankSuperAdminBranchRequests from "../pages/bankSuperAdmin/BranchRequests";
 
 // Shared Organization Admin
 import SharedOrganizationAdminDashboard from "../pages/organizationAdmin/Dashboard";
@@ -48,6 +46,7 @@ import AddService from "../pages/organizationAdmin/AddService";
 import SharedOrganizationAdminBranchAdmins from "../pages/organizationAdmin/BranchAdmins";
 import SharedOrganizationAdminServices from "../pages/organizationAdmin/Services";
 import SharedOrganizationAdminReports from "../pages/organizationAdmin/Reports";
+import OrganizationAdminSettings from "../pages/organizationAdmin/Settings";
 
 // Branch Admin
 import BranchAdminDashboard from "../pages/branchAdmin/Dashboard";
@@ -56,6 +55,7 @@ import BranchAdminAddStaff from "../pages/branchAdmin/AddStaff";
 import BranchAdminAddDoctor from "../pages/branchAdmin/AddDoctor";
 import BranchAdminOperations from "../pages/branchAdmin/Operations";
 import BranchAdminDetails from "../pages/branchAdmin/BranchDetails";
+import BranchAdminSettings from "../pages/branchAdmin/Settings";
 
 // Staff
 import StaffDashboard from "../pages/staff/Dashboard";
@@ -75,7 +75,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login loginType="default" />} />
       <Route path="/police-login" element={<Login loginType="police_super_admin" />} />
       <Route path="/hospital-login" element={<Login loginType="hospital_super_admin" />} />
-      <Route path="/company-login" element={<Login loginType="company_super_admin" />} />
+      <Route path="/bank-login" element={<Login loginType="bank_super_admin" />} />
       <Route path="/admin-login" element={<Login loginType="organization_admin" />} />
       <Route path="/branch-login" element={<Login loginType="branch_admin" />} />
       <Route path="/staff-login" element={<Login loginType="staff" />} />
@@ -252,84 +252,68 @@ export default function AppRoutes() {
           }
         />
 
-        {/* COMPANY SUPER ADMIN ROUTES */}
+        {/* BANK SUPER ADMIN ROUTES */}
         <Route
-          path="/company-super-admin/dashboard"
+          path="/bank-super-admin/dashboard"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminDashboard />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminDashboard />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/company-super-admin/organizations"
+          path="/bank-super-admin/organizations"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminOrganizations />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminOrganizations />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/company-super-admin/branches"
+          path="/bank-super-admin/branches"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminBranches />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminBranches />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/company-super-admin/add-bank"
+          path="/bank-super-admin/add-bank"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminAddBank />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminAddBank />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/company-super-admin/add-bank-branch"
+          path="/bank-super-admin/add-bank-branch"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminAddBankBranch />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminAddBankBranch />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/company-super-admin/add-supermarket"
+          path="/bank-super-admin/organization-admins"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminAddSupermarket />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminOrganizationAdmins />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/company-super-admin/add-supermarket-branch"
+          path="/bank-super-admin/branch-requests"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminAddSupermarketBranch />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminBranchRequests/>
             </ProtectedRoute>
           }
         />
         <Route
-          path="/company-super-admin/organization-admins"
+          path="/bank-super-admin/reports"
           element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminOrganizationAdmins />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company-super-admin/branch-requests"
-          element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminBranchRequests/>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company-super-admin/reports"
-          element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.COMPANY_SUPER_ADMIN]}>
-              <CompanySuperAdminReports />
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
+              <BankSuperAdminReports />
             </ProtectedRoute>
           }
         />
@@ -391,6 +375,14 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/organization-admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.ORGANIZATION_ADMIN]}>
+              <OrganizationAdminSettings />
+            </ProtectedRoute>
+          }
+        />
 
         {/* BRANCH ADMIN ROUTES */}
         <Route
@@ -433,6 +425,14 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+          <Route
+            path="/branch-admin/settings"
+            element={
+              <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BRANCH_ADMIN]}>
+                <BranchAdminSettings />
+              </ProtectedRoute>
+            }
+          />
         <Route
           path="/branch-admin/branch-details"
           element={

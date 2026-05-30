@@ -4,7 +4,7 @@ const counterSchema = new mongoose.Schema(
   {
     tenantType: {
       type: String,
-      enum: ["police", "bank", "supermarket", "hospital", "company"],
+      enum: ["police", "bank", "hospital"],
       required: true,
       trim: true,
       index: true,

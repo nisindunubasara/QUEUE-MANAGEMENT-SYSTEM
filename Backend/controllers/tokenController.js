@@ -1,4 +1,4 @@
-import { createNotification } from "./notificationController.js";
+import { createNotification, sendSMS } from "./notificationController.js";
 import mongoose from "mongoose";
 import Branch from "../models/Branch.js";
 import Service from "../models/Service.js";
@@ -8,6 +8,8 @@ import { buildTokenPrefix, formatSequenceNumber } from "../utils/generateToken.j
 import { normalizeTenantType } from "../utils/scopeHelpers.js";
 import Counter from "../models/Counter.js";
 
+
+const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
 const normalize = (value = "") => String(value || "").trim();
 const normalizeLower = (value = "") => normalize(value).toLowerCase();
@@ -23,8 +25,13 @@ const buildLegacyCompatibleScopeQuery = ({
   branchName,
   serviceId,
   serviceName,
+  bookingDate,
 }) => {
   const andClauses = [{ tenantType }];
+
+  if (bookingDate) {
+    andClauses.push({ bookingDate });
+  }
 
   const organizationClauses = [];
   if (organizationId) {
@@ -112,7 +119,7 @@ const buildQueueResponse = (tokens = []) => tokens.map((token) => buildTokenResp
 const getQueueSnapshot = async (branchId, serviceId) => {
   return Token.find({ branchId, serviceId })
     .sort({ sequenceNumber: 1, createdAt: 1 })
-    .lean();
+    ;
 };
 
 // create token
@@ -128,7 +135,11 @@ export const createToken = async (req, res) => {
       mobile,
       note,
       userId,
+      bookingDate: requestedBookingDate,
     } = req.body || {};
+
+    const bookingDate =
+      normalize(requestedBookingDate) || getTodayDateString();
 
     if (!branchId || !serviceId || !fullName || !mobile) {
       return res.status(400).json({
@@ -153,7 +164,7 @@ export const createToken = async (req, res) => {
 
     const [branch, service] = await Promise.all([
       Branch.findById(branchId)
-        .select("_id tenantType branchName city organizationId organizationName divisionId divisionName status")
+        .select("_id tenantType branchName city organizationId organizationName divisionId divisionName status services")
         .lean(),
       Service.findById(serviceId)
         .select("_id tenantType organizationId divisionId branchId serviceName status")
@@ -210,11 +221,36 @@ export const createToken = async (req, res) => {
       });
     }
 
-    if (String(branch.status || "").toLowerCase() !== "active") {
+    if (String(branch.status || "").toLowerCase() !== "active"&& String(branch.status || "").toLowerCase() !== "inactive") {
       return res.status(400).json({
         success: false,
         message: "Selected branch is not active",
       });
+    }
+
+    const branchServiceConfig = (Array.isArray(branch.services) ? branch.services : []).find(
+      (entry) => String(entry?.serviceId || "") === String(service._id)
+    );
+    const dateSpecificLimit = (Array.isArray(branchServiceConfig?.dailyLimits) ? branchServiceConfig.dailyLimits : []).find(
+      (entry) => normalize(entry?.date) === bookingDate
+    );
+    const serviceLevelLimit = Number(branchServiceConfig?.maxDailyTokens) || 0;
+    const branchLevelLimit = Number(branch.maxDailyTokens) || 0;
+    const maxAllowedTokens = Number(dateSpecificLimit?.limit) || serviceLevelLimit || branchLevelLimit || 0;
+
+    if (maxAllowedTokens > 0) {
+      const existingTokensForDate = await Token.countDocuments({
+        branchId: branch._id,
+        serviceId: service._id,
+        bookingDate,
+      });
+
+      if (existingTokensForDate >= maxAllowedTokens) {
+        return res.status(400).json({
+          success: false,
+          message: `Tokens are fully booked for ${bookingDate}. Daily limit of ${maxAllowedTokens} has been reached. Please select another date.`,
+        });
+      }
     }
 
     const organizationScope = resolveOrganizationScope({
@@ -256,6 +292,7 @@ export const createToken = async (req, res) => {
       city: branch.city,
       service: finalServiceName,
       serviceId: service._id,
+      bookingDate,
     });
 
     const tokenQuery = buildLegacyCompatibleScopeQuery({
@@ -266,9 +303,20 @@ export const createToken = async (req, res) => {
       branchName: finalBranchName,
       serviceId: service._id,
       serviceName: finalServiceName,
+      bookingDate: bookingDate,
     });
 
     let createdToken = null;
+
+    let formattedMobile = normalize(mobile);
+
+    if (formattedMobile.startsWith("0")) {
+      // මුලින්ම 0 තියෙනවා නම්, ඒක අයින් කරලා +94 දානවා (උදා: 077... -> +9477...)
+      formattedMobile = "+94" + formattedMobile.substring(1);
+    } else if (!formattedMobile.startsWith("+")) {
+      // කවුරුහරි 0 නැතුව කෙලින්ම 77... විදියට දුන්නොත් ඒකටත් +94 එකතු කරනවා
+      formattedMobile = "+94" + formattedMobile;
+    }
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const existingCount = await Token.countDocuments(tokenQuery);
@@ -279,6 +327,7 @@ export const createToken = async (req, res) => {
       const peopleAhead = await Token.countDocuments({
         branchId: branch._id,
         serviceId: service._id,
+        bookingDate,
         status: "Waiting",
       });
 
@@ -295,9 +344,10 @@ export const createToken = async (req, res) => {
         branch: finalBranchName,
         service: finalServiceName,
         fullName: normalize(fullName),
-        mobile: normalize(mobile),
+        mobile: formattedMobile,
         note: normalize(note),
         userId: userId || req.user?.id || null,
+        bookingDate,
         tokenPrefix,
         tokenNumber,
         sequenceNumber,
@@ -310,6 +360,9 @@ export const createToken = async (req, res) => {
       try {
         createdToken = await token.save();
         // tokenController.js -> createToken function එක ඇතුළත
+
+        const notifMessage = `Your token ${tokenNumber} for ${finalServiceName} at ${finalBranchName} has been successfully generated.`;
+
         await createNotification({
           tenantType: resolvedTenantType,
           tokenNumber: tokenNumber,
@@ -319,6 +372,11 @@ export const createToken = async (req, res) => {
           module: resolvedTenantType, // bank, police, etc.
           userId: token.userId || req.user?.id
         });
+
+        /*if (createdToken.mobile) {
+           await sendSMS(createdToken.mobile, notifMessage);
+        }*/
+
         break;
       } catch (saveError) {
         if (saveError?.code !== 11000 || attempt === 2) {
@@ -399,6 +457,13 @@ export const trackTokenByNumber = async (req, res) => {
         message: "Token not found",
       });
     }
+
+    const branch = await Branch.findById(token.branchId).lean();
+    const serviceConfig = (Array.isArray(branch?.services) ? branch.services : []).find(
+      (service) => String(service?.serviceId || "") === String(token.serviceId || "")
+    );
+    const averageTokenTime = serviceConfig?.averageTokenTime || 15;
+
     // Calculate live peopleAhead: tokens with smaller sequenceNumber and status Waiting
     const livePeopleAhead = await Token.countDocuments({
       branchId: token.branchId,
@@ -437,9 +502,57 @@ export const trackTokenByNumber = async (req, res) => {
       status: "active",
     }).lean();
 
-    const estimatedWait = activeWorkSession
-      ? `${Math.max(livePeopleAhead * 15, 15)} min`
-      : "Queue not started";
+    const waitTimeMins = Math.max(livePeopleAhead * averageTokenTime, averageTokenTime);
+
+    const getOpenTimeForBookingDate = () => {
+      const operatingHours = Array.isArray(branch?.operatingHours) ? branch.operatingHours : [];
+      const matchedEntry = operatingHours.find(
+        (entry) => String(entry?.date || "").trim() === String(token.bookingDate || "").trim()
+      );
+
+      return String(matchedEntry?.openTime || "09:00").trim() || "09:00";
+    };
+
+    const formatExpectedArrivalTime = (dateValue) => {
+      const sourceDate = dateValue instanceof Date ? dateValue : new Date(dateValue);
+      if (Number.isNaN(sourceDate.getTime())) {
+        return `${token.bookingDate} | 09:00 AM`;
+      }
+
+      const year = sourceDate.getFullYear();
+      const month = String(sourceDate.getMonth() + 1).padStart(2, "0");
+      const day = String(sourceDate.getDate()).padStart(2, "0");
+
+      let hours = sourceDate.getHours();
+      const minutes = String(sourceDate.getMinutes()).padStart(2, "0");
+      const period = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12;
+      hours = hours === 0 ? 12 : hours;
+
+      return `${year}-${month}-${day} | ${String(hours).padStart(2, "0")}:${minutes} ${period}`;
+    };
+
+    const buildExpectedArrivalDate = () => {
+      if (activeWorkSession) {
+        const arrivalDate = new Date();
+        arrivalDate.setMinutes(arrivalDate.getMinutes() + waitTimeMins);
+        return arrivalDate;
+      }
+
+      const openTime = getOpenTimeForBookingDate();
+      const [hoursPart = "09", minutesPart = "00"] = String(openTime).split(":");
+      const arrivalDate = new Date(`${token.bookingDate}T00:00:00`);
+
+      if (Number.isNaN(arrivalDate.getTime())) {
+        return new Date();
+      }
+
+      arrivalDate.setHours(Number(hoursPart) || 9, Number(minutesPart) || 0, 0, 0);
+      arrivalDate.setMinutes(arrivalDate.getMinutes() + waitTimeMins);
+      return arrivalDate;
+    };
+
+    const expectedArrivalTime = formatExpectedArrivalTime(buildExpectedArrivalDate());
 
     return res.status(200).json({
       success: true,
@@ -462,7 +575,7 @@ export const trackTokenByNumber = async (req, res) => {
         status: token.status,
         currentToken,
         peopleAhead: livePeopleAhead,
-        estimatedWait,
+        expectedArrivalTime,
         createdAt: token.createdAt,
       },
     });
@@ -550,6 +663,7 @@ export const callNextToken = async (req, res) => {
     const nextToken = await Token.findOne({
       branchId: counter.branchId,
       serviceId: counter.serviceId,
+      bookingDate: getTodayDateString(),
       status: "Waiting"
     }).sort({ sequenceNumber: 1 });
 
@@ -630,6 +744,7 @@ export const skipAndCallNextToken = async (req, res) => {
     const nextToken = await Token.findOne({
       branchId: counter.branchId,
       serviceId: counter.serviceId,
+      bookingDate: getTodayDateString(),
       status: "Waiting",
     }).sort({ sequenceNumber: 1 });
 
@@ -712,15 +827,18 @@ export const skipAndPushBackToken = async (req, res) => {
           branchId: token.branchId,
           serviceId: token.serviceId,
           status: "Waiting",
+          bookingDate: getTodayDateString(),
         })
           .sort({ sequenceNumber: 1, createdAt: 1 })
           .select("sequenceNumber")
           .lean();
 
     const lastVisibleToken = waitingTokensAfterCurrent[waitingTokensAfterCurrent.length - 1];
-    const newSequenceNumber = lastVisibleToken
-      ? Number(lastVisibleToken.sequenceNumber) + 0.5
-      : Number(token.sequenceNumber) + 0.5;
+    const baseSequence = lastVisibleToken
+      ? Number(lastVisibleToken.sequenceNumber)
+      : Number(token.sequenceNumber);
+    // Add a random fraction to prevent E11000 duplicate key errors
+    const newSequenceNumber = baseSequence + 0.5 + (Math.random() * 0.01);
 
     const updatedToken = await Token.findByIdAndUpdate(
       tokenId,
@@ -802,14 +920,14 @@ export const reactivateToken = async (req, res) => {
     if (waitingTokens.length >= 5) {
       const fourthSeq = Number(waitingTokens[3].sequenceNumber);
       const fifthSeq = Number(waitingTokens[4].sequenceNumber);
-      newSequenceNumber = (fourthSeq + fifthSeq) / 2;
+      newSequenceNumber = ((fourthSeq + fifthSeq) / 2) + (Math.random() * 0.001);
     } else if (waitingTokens.length > 0) {
       // Fewer than 5 tokens: place at the end by using lastSeq + 0.5
       const lastSeq = Number(waitingTokens[waitingTokens.length - 1].sequenceNumber);
-      newSequenceNumber = lastSeq + 0.5;
+      newSequenceNumber = lastSeq + 0.5 + (Math.random() * 0.001);
     } else {
       // No waiting tokens: place at sequenceNumber 1
-      newSequenceNumber = 1;
+      newSequenceNumber = 1 + (Math.random() * 0.001);
     }
 
     const updatedToken = await Token.findByIdAndUpdate(
@@ -863,10 +981,10 @@ export const getNextWaitingToken = async (req, res) => {
     const nextToken = await Token.findOne({
       branchId: branchId,
       serviceId: serviceId,
+      bookingDate: getTodayDateString(),
       status: "Waiting"
     })
-    .sort({ sequenceNumber: 1 }) // පළමු ටෝකනය
-    .lean();
+    .sort({ sequenceNumber: 1 }); // පළමු ටෝකනය
 
     return res.status(200).json({
       success: true,
@@ -893,6 +1011,7 @@ export const getWaitingTokenCount = async (req, res) => {
     const count = await Token.countDocuments({
       branchId: branchId,
       serviceId: serviceId,
+      bookingDate: getTodayDateString(),
       status: "Waiting"
     });
 
@@ -929,11 +1048,11 @@ export const getProcessedTokensByCounter = async (req, res) => {
     const tokens = await Token.find({
       counterId: new mongoose.Types.ObjectId(counterId),
       status: { $in: ["Completed", "Skipped"] },
+      bookingDate: getTodayDateString(),
     })
       .select("tokenNumber status serviceName completedAt skippedAt createdAt")
       .sort({ completedAt: -1, skippedAt: -1, createdAt: -1 })
-      .limit(limit)
-      .lean();
+      .limit(limit);
 
     return res.status(200).json({
       success: true,
@@ -959,10 +1078,10 @@ export const getWaitingQueueTokens = async (req, res) => {
     const tokens = await Token.find({
       branchId,
       serviceId,
+      bookingDate: getTodayDateString(),
       status: "Waiting",
     })
-      .sort({ sequenceNumber: 1, createdAt: 1 })
-      .lean();
+      .sort({ sequenceNumber: 1, createdAt: 1 });
 
     return res.status(200).json({
       success: true,
@@ -988,10 +1107,10 @@ export const getTemporarilySkippedTokens = async (req, res) => {
     const tokens = await Token.find({
       branchId,
       serviceId,
+      bookingDate: getTodayDateString(),
       status: "skipped_temporarily",
     })
-      .sort({ sequenceNumber: 1, createdAt: 1 })
-      .lean();
+      .sort({ sequenceNumber: 1, createdAt: 1 });
 
     return res.status(200).json({
       success: true,

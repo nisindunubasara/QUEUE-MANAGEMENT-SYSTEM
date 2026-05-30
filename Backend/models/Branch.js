@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import "dotenv/config";
 
 const branchSchema = new mongoose.Schema(
   {
@@ -83,6 +84,11 @@ const branchSchema = new mongoose.Schema(
       default: "active",
     },
 
+    maxDailyTokens: {
+      type: Number,
+      default: 0,
+    },
+
     createdBy: {
       type: String,
       default: null,
@@ -97,12 +103,56 @@ const branchSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    operatingHours: [
+      {
+        date: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        openTime: {
+          type: String,
+          default: "",
+        },
+        closeTime: {
+          type: String,
+          default: "",
+        },
+      },
+    ],
     services: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Service",
-        default: [] 
-      }
+        serviceId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Service",
+        },
+        status: {
+          type: String,
+          enum: ["active", "inactive"],
+          default: "active",
+        },
+        maxDailyTokens: {
+          type: Number,
+          default: 0,
+        },
+        averageTokenTime: {
+          type: Number,
+          default: 15,
+        },
+        dailyLimits: [
+          {
+            date: {
+              type: String,
+              required: true,
+              trim: true,
+            },
+            limit: {
+              type: Number,
+              default: 0,
+            },
+          },
+        ],
+      },
     ],
   },
   { timestamps: true }

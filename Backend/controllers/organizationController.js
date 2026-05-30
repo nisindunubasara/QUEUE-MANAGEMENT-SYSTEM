@@ -537,7 +537,7 @@ export const createOrganization = async (req, res) => {
     const requesterTenantType = normalizeTenantType(req.user.tenantType);
 
     const allowedTenantTypesByRole = {
-      company_super_admin: ["bank", "supermarket"],
+      bank_super_admin: ["bank", "supermarket"],
       police_super_admin: ["police"],
       hospital_super_admin: ["hospital"],
     };
@@ -656,7 +656,7 @@ export const getOrganizations = async (req, res) => {
     const requestedTenantType = normalizeTenantType(req.query?.tenantType);
 
     const allowedTenantTypesByRole = {
-      company_super_admin: ["bank", "supermarket"],
+      bank_super_admin: ["bank", "supermarket"],
       hospital_super_admin: ["hospital"],
       police_super_admin: ["police"],
     };
@@ -730,8 +730,8 @@ export const getOrganizationsList = async (req, res) => {
     }
 
     const statusFilter = tenantType === "police" && includePending
-      ? ["pending", "approved", "active"]
-      : ["approved", "active"];
+      ? ["pending", "approved", "active","inactive"]
+      : ["approved", "active","inactive"];
 
     const organizations = await Organization.find({
       tenantType,

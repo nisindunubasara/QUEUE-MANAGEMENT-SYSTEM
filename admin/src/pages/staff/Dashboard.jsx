@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   getCurrentStaffTask,
   callNextToken,
@@ -67,6 +67,7 @@ const clearCurrentTaskFromStorage = () => {
 export default function StaffDashboard() {
   const { user, tenantType } = useAuth();
   const context = useOutletContext() || {};
+  const navigate = useNavigate();
   const theme = context.tenant?.theme;
   const isHospitalTenant = String(user?.tenantType || tenantType || "").toLowerCase() === "hospital";
 
@@ -542,36 +543,36 @@ const handleSkipToken = async () => {
         <section className="grid md:grid-cols-3 gap-6">
           {/* Main Card */}
           {isHospitalTenant ? (
-            <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 md:p-10 shadow-xl">
+            <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 p-5 md:p-6 shadow-xl">
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 block">
                 Currently Called Token
               </span>
-              <h2 className={`text-2xl md:text-6xl font-black tracking-tighter ${theme?.text || "text-blue-600"}`}>
+              <h2 className={`text-3xl md:text-4xl lg:text-5xl truncate font-black tracking-tighter ${theme?.text || "text-blue-600"}`}>
                 {currentTask?.tokenNumber || "--"}
               </h2>
             </div>
           ) : (
-            <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 md:p-10 shadow-xl flex flex-col gap-6">
+            <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 p-5 md:p-6 shadow-xl flex flex-col gap-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-dashed pb-6">
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 block">
                     Serving Now
                   </span>
                   <h2
-                    className={`text-2xl md:text-6xl font-black tracking-tighter ${theme?.text || "text-blue-600"}`}
+                    className={`text-3xl md:text-4xl font-black truncate tracking-tighter ${theme?.text || "text-blue-600"}`}
                   >
                     {currentTask?.tokenNumber || "--"}
                   </h2>
                 </div>
                 {currentTask?.startedAt ? (
-                  <div className="flex flex-col items-end">
+                  <div className="flex shrink-0 flex-col items-end">
                     <span className="text-xs text-slate-500">Customer Serving Time</span>
                     <span className="font-mono text-2xl font-bold text-slate-700 bg-slate-100 px-4 py-1 rounded-lg">
                       {elapsedTime}
                     </span>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-end">
+                  <div className="flex shrink-0 flex-col items-end">
                     <span className="text-xs text-slate-500">No Customer</span>
                     <span className="font-mono text-2xl font-bold text-slate-400 px-4 py-1">
                       --:--:--
@@ -629,14 +630,14 @@ const handleSkipToken = async () => {
                     <button
                       onClick={handleProcessToken}
                       disabled={actionLoading}
-                      className={`w-full ${theme?.primary || "bg-blue-600"} text-white py-6 rounded-2xl text-2xl font-bold shadow-xl active:scale-95 transition-all hover:brightness-110 disabled:opacity-50`}
+                      className={`w-full ${theme?.primary || "bg-blue-600"} text-white py-4 rounded-xl text-lg font-bold shadow-xl active:scale-95 transition-all hover:brightness-110 disabled:opacity-50`}
                     >
                       {actionLoading ? "Processing..." : "Complete & Call Next"}
                     </button>
                     <button
                       onClick={handleSkipToken}
                       disabled={actionLoading}
-                      className="w-full rounded-2xl border border-amber-200 bg-amber-50 py-6 text-2xl font-bold text-amber-700 shadow-sm transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50"
+                      className="w-full rounded-xl border border-amber-200 bg-amber-50 py-4 text-lg font-bold text-amber-700 shadow-sm transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50"
                     >
                       {actionLoading ? "Processing..." : "Skip & Call Next"}
                     </button>
@@ -644,10 +645,16 @@ const handleSkipToken = async () => {
                 ) : (
                   <button
                     onClick={handleProcessToken}
-                    disabled={actionLoading}
-                    className={`${theme?.primary || "bg-blue-600"} text-white w-full py-6 rounded-2xl text-2xl font-bold shadow-lg active:scale-95 transition-all disabled:opacity-50`}
+                    disabled={actionLoading || !nextWaitingToken}
+                    className={`w-full py-4 rounded-xl text-lg font-bold shadow-lg transition-all active:scale-95 disabled:opacity-60 ${
+                      !nextWaitingToken
+                        ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                        : `${theme?.primary || "bg-blue-600"} text-white hover:brightness-110`
+                    }`}
                   >
-                    {actionLoading ? "Processing..." : "Call First Customer"}
+                    {actionLoading 
+                      ? "Processing..." 
+                      : (!nextWaitingToken ? "Queue Empty - Waiting..." : "Call Next Customer")}
                   </button>
                 )}
                 <p className="mt-4 text-sm text-slate-400 font-medium">
@@ -682,7 +689,7 @@ const handleSkipToken = async () => {
               </h4>
               <div className="text-slate-500 text-sm mb-3">
                 <span className="text-xs uppercase tracking-widest font-bold text-slate-400">Session Duration</span>
-                <p className="font-mono text-lg font-bold text-slate-700 bg-white px-3 py-2 rounded-lg mt-1 border border-slate-200">
+                <p className="font-mono text-xl font-bold text-slate-800 px-3 py-2 rounded-lg mt-1">
                   {sessionDuration}
                 </p>
               </div>
@@ -720,12 +727,12 @@ const handleSkipToken = async () => {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl">
             <div className="mb-5 flex items-end justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">Waiting Queue</h3>
+                <h3 className="text-xl font-semibold text-slate-900">Waiting Queue</h3>
                 <p className="text-sm text-slate-500">Skip & Push is available for the first 5 tokens only</p>
               </div>
               <div className="text-right">
                 <div className="text-xs uppercase tracking-widest text-slate-400">Total Waiting</div>
-                <div className="text-2xl font-bold text-slate-900">{waitingTokens.length}</div>
+                <div className="text-xl md:text-2xl font-bold text-slate-900">{waitingTokens.length}</div>
               </div>
             </div>
 
@@ -735,39 +742,43 @@ const handleSkipToken = async () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {waitingTokens.map((token, index) => (
-                  <div
-                    key={token._id || token.id || index}
-                    className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-lg font-bold text-slate-900">{token.tokenNumber}</span>
-                        {index < 5 && (
-                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-amber-700">
-                            Priority
+                {waitingTokens.slice(0, 8).map((token, index) => {
+                  const isBlurred = index === 7 && waitingTokens.length > 7;
+
+                  return (
+                    <div
+                      key={token._id || token.id || index}
+                      className={`flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between ${isBlurred ? "opacity-40 blur-[2px] pointer-events-none select-none" : ""}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="break-words font-mono text-base font-bold text-slate-900">{token.tokenNumber}</span>
+                          {index < 5 && (
+                            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-amber-700">
+                              Priority
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600">{token.fullName || "N/A"}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {index < 5 ? (
+                          <button
+                            onClick={() => handleSkipAndPushToken(token)}
+                            disabled={actionLoading}
+                            className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition-all hover:bg-amber-100 disabled:opacity-50"
+                          >
+                            {actionLoading ? "Processing..." : "Skip & Push"}
+                          </button>
+                        ) : (
+                          <span className="rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500">
+                            Locked
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-600">{token.fullName || "N/A"}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {index < 5 ? (
-                        <button
-                          onClick={() => handleSkipAndPushToken(token)}
-                          disabled={actionLoading}
-                          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition-all hover:bg-amber-100 disabled:opacity-50"
-                        >
-                          {actionLoading ? "Processing..." : "Skip & Push"}
-                        </button>
-                      ) : (
-                        <span className="rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500">
-                          Locked
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -775,12 +786,12 @@ const handleSkipToken = async () => {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl">
             <div className="mb-5 flex items-end justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">Temporarily Skipped Patients</h3>
+                <h3 className="text-xl font-semibold text-slate-900">Temporarily Skipped Patients</h3>
                 <p className="text-sm text-slate-500">Re-activate any skipped token back into the active queue</p>
               </div>
               <div className="text-right">
                 <div className="text-xs uppercase tracking-widest text-slate-400">Skipped</div>
-                <div className="text-2xl font-bold text-slate-900">{temporarilySkippedTokens.length}</div>
+                <div className="text-xl md:text-2xl font-bold text-slate-900">{temporarilySkippedTokens.length}</div>
               </div>
             </div>
 
@@ -796,33 +807,33 @@ const handleSkipToken = async () => {
                   return (
                     <div
                       key={token._id || token.id || index}
-                      className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between"
+                      className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:flex-row md:items-start md:justify-between"
                     >
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-lg font-bold text-slate-900">{token.tokenNumber}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="font-mono text-lg font-bold text-slate-900 break-all">{token.tokenNumber}</span>
                           <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-rose-700">
                             Temporary
                           </span>
                         </div>
-                        <p className="text-sm text-slate-600">{token.fullName || "N/A"}</p>
+                        <p className="truncate text-sm text-slate-600">{token.fullName || "N/A"}</p>
                         <p className="text-xs text-slate-400">
                           Skipped at {skippedTime ? new Date(skippedTime).toLocaleTimeString() : "-"}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleReactivateToken(token)}
                             disabled={actionLoading}
-                            className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
+                            className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold whitespace-nowrap text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
                           >
                             {actionLoading ? "Processing..." : "Re-activate"}
                           </button>
                           <button
                             onClick={() => handleCancelToken(token)}
                             disabled={cancelingTokenId === token._id}
-                            className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 border border-red-100 transition-all disabled:opacity-50`}
+                            className={`rounded-xl px-3 py-2 text-sm font-semibold whitespace-nowrap text-red-600 hover:bg-red-50 border border-red-100 transition-all disabled:opacity-50`}
                           >
                             {cancelingTokenId === token._id ? "Cancelling..." : "Cancel"}
                           </button>
@@ -841,23 +852,19 @@ const handleSkipToken = async () => {
       {!workSession && (
         <section className="bg-white rounded-3xl border border-slate-200 p-10 shadow-xl text-center">
           <div className="space-y-6">
-            <div className="text-5xl">😴</div>
+            <div className="text-5xl">👋</div>
             <h2 className="text-2xl font-bold text-slate-900">
-              No Active Task
+              Ready to Start Your Shift?
             </h2>
             <p className="text-slate-500">
-              Click below to call the first customer in the queue.
+              You need to start a work session by selecting a service and a counter before you can serve customers.
             </p>
             <button
-              onClick={handleProcessToken}
-              disabled={actionLoading}
-              className={`${theme?.primary || "bg-blue-600"} text-white px-12 py-5 rounded-2xl text-xl font-bold shadow-lg active:scale-95 transition-all disabled:opacity-50`}
+              onClick={() => navigate("/staff/tasks")}
+              className={`${theme?.primary || "bg-blue-600"} text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg active:scale-95 transition-all hover:brightness-110`}
             >
-              {actionLoading ? "Processing..." : "Call First Customer"}
+              Go to Tasks & Start Work
             </button>
-            {taskError && (
-              <div className="text-red-500 text-sm mt-2">{taskError}</div>
-            )}
           </div>
         </section>
       )}

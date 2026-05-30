@@ -5,6 +5,8 @@ import {
   createOrganizationBranchAdmin,
   getOrganizationBranchAdmins,
 } from "../../services/organizationAdminService";
+import SlideOver from "../../components/common/SlideOver";
+import { BadgeCheck, Building2, Mail, Phone, ShieldCheck, User } from "lucide-react";
 
 const formatStatusLabel = (status = "") => {
   const normalized = String(status || "").trim().toLowerCase();
@@ -34,10 +36,11 @@ const getStatusBadgeClass = (status = "") => {
 export default function SharedOrganizationAdminBranchAdmins() {
   const { tenantType } = useAuth();
   const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
-  const isCompanyTenant = ["bank", "supermarket", "hospital", "police"].includes(normalizedTenantType);
+  const isBankTenant = ["bank", "hospital", "police"].includes(normalizedTenantType);
 
   const [branches, setBranches] = useState([]);
   const [branchAdmins, setBranchAdmins] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -64,11 +67,16 @@ export default function SharedOrganizationAdminBranchAdmins() {
   useEffect(() => {
     let isMounted = true;
 
-    const loadData = async () => {
+    const loadData = async (isInitialLoad = false) => {
       try {
-        setLoading(true);
-        setError("");
-        setSuccessMessage("");
+        if (isInitialLoad) {
+          setLoading(true);
+        }
+
+        if (isMounted) {
+          setError("");
+          setSuccessMessage("");
+        }
 
         const [branchesResult, branchAdminsResult] = await Promise.allSettled([
           loadBranches(),
@@ -81,21 +89,29 @@ export default function SharedOrganizationAdminBranchAdmins() {
 
         if (branchesResult.status === "fulfilled") {
           const fetchedBranches = branchesResult.value;
-          setBranches(fetchedBranches);
-          setFormData((prev) => ({
-            ...prev,
-            branchId: prev.branchId || fetchedBranches[0]?.id || "",
-          }));
+          if (isMounted) {
+            setBranches(fetchedBranches);
+            setFormData((prev) => ({
+              ...prev,
+              branchId: prev.branchId || fetchedBranches[0]?.id || "",
+            }));
+          }
         } else {
-          setBranches([]);
-          setError(branchesResult.reason?.message || "Failed to load branches");
+          if (isMounted) {
+            setBranches([]);
+            setError(branchesResult.reason?.message || "Failed to load branches");
+          }
         }
 
         if (branchAdminsResult.status === "fulfilled") {
-          setBranchAdmins(branchAdminsResult.value);
+          if (isMounted) {
+            setBranchAdmins(branchAdminsResult.value);
+          }
         } else {
-          setBranchAdmins([]);
-          setError(branchAdminsResult.reason?.message || "Failed to load branch admins");
+          if (isMounted) {
+            setBranchAdmins([]);
+            setError(branchAdminsResult.reason?.message || "Failed to load branch admins");
+          }
         }
       } catch (err) {
         if (!isMounted) {
@@ -106,16 +122,21 @@ export default function SharedOrganizationAdminBranchAdmins() {
         setBranches([]);
         setBranchAdmins([]);
       } finally {
-        if (isMounted) {
+        if (isMounted && isInitialLoad) {
           setLoading(false);
         }
       }
     };
 
-    loadData();
+    loadData(true);
+
+    const intervalId = setInterval(() => {
+      loadData(false);
+    }, 5000);
 
     return () => {
       isMounted = false;
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -130,7 +151,7 @@ export default function SharedOrganizationAdminBranchAdmins() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!isCompanyTenant) {
+    if (!isBankTenant) {
       return;
     }
 
@@ -186,7 +207,7 @@ export default function SharedOrganizationAdminBranchAdmins() {
         <p className="mt-2 text-sm text-slate-500">View and manage branch administrators grouped by branch</p>
       </div>
 
-      {isCompanyTenant && (
+      {isBankTenant && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">Add Branch Admin</h2>
           <p className="mt-2 text-sm text-slate-500">Create a branch administrator for one of your branches</p>
@@ -354,23 +375,43 @@ export default function SharedOrganizationAdminBranchAdmins() {
               <p className="mt-4 text-sm text-slate-500">No branch admins for this branch</p>
             ) : (
               <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full table-fixed text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Name</th>
-                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Email</th>
-                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Username</th>
-                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Phone</th>
-                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Status</th>
+                      <th className="w-1/4 px-4 py-3 text-left font-semibold text-slate-900">Name</th>
+                      <th className="w-1/4 px-4 py-3 text-left font-semibold text-slate-900">Email</th>
+                      <th className="w-1/5 px-4 py-3 text-left font-semibold text-slate-900">Username</th>
+                      <th className="w-1/5 px-4 py-3 text-left font-semibold text-slate-900">Phone</th>
+                      <th className="w-auto px-4 py-3 text-left font-semibold text-slate-900">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {branch.admins.map((admin) => (
-                      <tr key={admin.id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium text-slate-900">{admin.name || "-"}</td>
-                        <td className="px-4 py-3 text-slate-600">{admin.email || "-"}</td>
-                        <td className="px-4 py-3 text-slate-600">{admin.username || "-"}</td>
-                        <td className="px-4 py-3 text-slate-600">{admin.phone || "-"}</td>
+                      <tr
+                        key={admin.id}
+                        onClick={() => setSelectedItem({ ...admin, branchName: branch.branchName })}
+                        className="cursor-pointer border-b border-slate-100 hover:bg-slate-50"
+                      >
+                        <td className="px-4 py-3 font-medium text-slate-900">
+                          <div className="truncate" title={admin.name || "-"}>
+                            {admin.name || "-"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          <div className="truncate" title={admin.email || "-"}>
+                            {admin.email || "-"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          <div className="truncate" title={admin.username || "-"}>
+                            {admin.username || "-"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          <div className="truncate" title={admin.phone || "-"}>
+                            {admin.phone || "-"}
+                          </div>
+                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(
@@ -388,6 +429,98 @@ export default function SharedOrganizationAdminBranchAdmins() {
             )}
           </section>
         ))}
+
+      <SlideOver
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        title="Branch Admin Details"
+      >
+        {selectedItem && (
+          <div className="space-y-6">
+            <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-sky-100 p-3 text-sky-700">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold tracking-tight text-slate-900">{selectedItem.name || "-"}</h3>
+                  <p className="mt-1 text-sm text-slate-500">Branch admin account details</p>
+                </div>
+              </div>
+
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
+                  selectedItem.status
+                )}`}
+              >
+                {formatStatusLabel(selectedItem.status)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-sky-700 shadow-sm">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Name</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.name || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-indigo-700 shadow-sm">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.email || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-emerald-700 shadow-sm">
+                    <BadgeCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Username</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.username || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-slate-700 shadow-sm">
+                    <Phone className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Phone</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.phone || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:col-span-2">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-violet-700 shadow-sm">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Branch</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.branchName || "-"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </SlideOver>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { errorResponse, successResponse } from "../utils/responseHelpers.js";
 import { isValidObjectId, requireFields } from "../utils/validationHelpers.js";
 
-const ALLOWED_TENANT_TYPES = new Set(["police", "hospital", "bank", "supermarket"]);
+const ALLOWED_TENANT_TYPES = new Set(["police", "hospital", "bank"]);
 const ALLOWED_STATUSES = new Set(["active", "inactive"]);
 
 const parseBoolean = (value) => {
@@ -45,6 +45,7 @@ const buildBranchResponse = (branch) => ({
   contactNumber: branch.contactNumber,
   email: branch.email,
   status: branch.status,
+  maxDailyTokens: branch.maxDailyTokens || 0,
   organizationId: branch.organizationId || null,
   organizationName: branch.organizationName || branch.divisionName || null,
   branchAdminAccess: Boolean(branch.branchAdminAccess),
@@ -149,6 +150,7 @@ const buildBranchPayload = (req, tenantType, scope) => ({
   contactNumber: normalizeText(req.body?.contactNumber),
   email: normalizeText(req.body?.email).toLowerCase(),
   status: normalizeText(req.body?.status || "active").toLowerCase(),
+  maxDailyTokens: Number(req.body?.maxDailyTokens) || 0,
   branchAdminAccess: parseBoolean(req.body?.branchAdminAccess),
   createdBy: req.user?.id || req.user?._id || null,
   divisionName: tenantType === "police" ? scope.divisionName || scope.organizationName || "" : null,
@@ -215,7 +217,7 @@ export const createBranch = async (req, res) => {
 
     const tenantType = normalizeTenantType(req.body.tenantType);
     if (!ALLOWED_TENANT_TYPES.has(tenantType)) {
-      return errorResponse(res, 400, "tenantType must be one of police, hospital, bank, or supermarket");
+      return errorResponse(res, 400, "tenantType must be one of police, hospital or bank");
     }
 
     const userTenantType = normalizeTenantType(req.user.tenantType);
@@ -299,8 +301,8 @@ export const getBranches = async (req, res) => {
     const query = {};
 
     if (isSuperAdmin(req.user)) {
-      if (role === "company_super_admin") {
-        query.tenantType = { $in: ["bank", "supermarket"] };
+      if (role === "bank_super_admin") {
+        query.tenantType = { $in: ["bank"] };
       } else if (role === "hospital_super_admin") {
         query.tenantType = "hospital";
       } else if (role === "police_super_admin") {
@@ -372,7 +374,7 @@ export const getPublicBranches = async (req, res) => {
 
     const query = {
       tenantType,
-      status: "active",
+      status: { $in: ["approved", "active","inactive"] },
     };
 
     
@@ -462,6 +464,7 @@ export const updateBranch = async (req, res) => {
       "contactNumber",
       "email",
       "status",
+      "maxDailyTokens",
       "branchAdminAccess",
       "organizationName",
       "divisionName",
@@ -525,6 +528,12 @@ export const updateBranch = async (req, res) => {
       }
     }
 
+    if (updates.maxDailyTokens !== undefined) {
+      updates.maxDailyTokens = Number(updates.maxDailyTokens) || 0;
+    } else {
+      updates.maxDailyTokens = 0;
+    }
+
     if (updates.branchAdminAccess !== undefined) {
       updates.branchAdminAccess = parseBoolean(updates.branchAdminAccess);
     }
@@ -559,6 +568,6 @@ export const updateBranch = async (req, res) => {
 
 export const createHospitalBranch = async (req, res) => createBranch(req, res);
 
-export const createCompanyBranch = async (req, res) => createBranch(req, res);
+export const createBankBranch = async (req, res) => createBranch(req, res);
 
 export const listBranches = async (req, res) => getBranches(req, res);

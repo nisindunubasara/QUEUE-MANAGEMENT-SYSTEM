@@ -11,7 +11,7 @@ import {
 import { errorResponse, successResponse } from "../utils/responseHelpers.js";
 import { isValidObjectId, requireFields } from "../utils/validationHelpers.js";
 
-const COMMON_TENANT_TYPES = new Set(["police", "bank", "supermarket", "hospital"]);
+const COMMON_TENANT_TYPES = new Set(["police", "bank", "hospital"]);
 
 const normalizeText = (value = "") => String(value || "").trim();
 const normalizeEmail = (value = "") => normalizeText(value).toLowerCase();
@@ -43,6 +43,7 @@ const buildBranchRequestResponse = (branchRequest) => ({
   contactNumber: branchRequest.contactNumber,
   email: branchRequest.email,
   status: branchRequest.status,
+  maxDailyTokens: branchRequest.maxDailyTokens || 0,
   requestedBy: branchRequest.requestedBy,
   requestedByRole: branchRequest.requestedByRole,
   branchAdminAccess: Boolean(branchRequest.branchAdminAccess),
@@ -113,6 +114,7 @@ const buildBranchCreatePayload = (req, tenantType, scope) => {
     contactNumber: normalizeText(req.body?.contactNumber),
     email: normalizeEmail(req.body?.email),
     status: "pending",
+    maxDailyTokens: Number(req.body?.maxDailyTokens) || 0,
     branchAdminAccess: parseBoolean(req.body?.branchAdminAccess),
     requestedBy: req.user?.id || req.user?._id || null,
     requestedByRole: "organization_admin",
@@ -154,7 +156,7 @@ export const createBranchRequest = async (req, res) => {
 
     const tenantType = normalizeTenantType(req.body.tenantType || req.user.tenantType);
     if (!COMMON_TENANT_TYPES.has(tenantType)) {
-      return errorResponse(res, 400, "tenantType must be one of police, hospital, bank, or supermarket");
+      return errorResponse(res, 400, "tenantType must be one of police, hospital, bank");
     }
 
     if (tenantType !== normalizeTenantType(req.user.tenantType)) {
@@ -278,8 +280,8 @@ export const getPendingBranchRequests = async (req, res) => {
     const role = normalizeText(req.user.role).toLowerCase();
     const requestFilter = { status: "pending" };
 
-    if (role === "company_super_admin") {
-      requestFilter.tenantType = { $in: ["bank", "supermarket"] };
+    if (role === "bank_super_admin") {
+      requestFilter.tenantType = { $in: ["bank"] };
     } else if (role === "hospital_super_admin") {
       requestFilter.tenantType = "hospital";
     } else if (role === "police_super_admin") {
@@ -347,7 +349,7 @@ export const approveBranchRequest = async (req, res) => {
 
     let canManageTenant = false;
 
-    if (role === "company_super_admin") {
+    if (role === "bank_super_admin") {
       canManageTenant = ["bank", "supermarket"].includes(requestTenantType);
     } else if (role === "hospital_super_admin") {
       canManageTenant = requestTenantType === "hospital";
@@ -389,6 +391,7 @@ export const approveBranchRequest = async (req, res) => {
       contactNumber: branchRequest.contactNumber || "",
       email: branchRequest.email || "",
       status: "active",
+      maxDailyTokens: branchRequest.maxDailyTokens || 0,
       createdBy: branchRequest.requestedBy || null,
       branchAdminAccess: Boolean(branchRequest.branchAdminAccess),
     };
@@ -498,7 +501,7 @@ export const rejectBranchRequest = async (req, res) => {
 
     let canManageTenant = false;
 
-    if (role === "company_super_admin") {
+    if (role === "bank_super_admin") {
       canManageTenant = ["bank", "supermarket"].includes(requestTenantType);
     } else if (role === "hospital_super_admin") {
       canManageTenant = requestTenantType === "hospital";

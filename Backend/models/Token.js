@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import 'dotenv/config';
 
 const tokenSchema = new mongoose.Schema({
   tenantType: {
@@ -137,11 +138,19 @@ const tokenSchema = new mongoose.Schema({
     default: "",
   },
 
+  bookingDate: {
+    type: String,
+    required: true,
+    default: () => new Date().toISOString().split("T")[0],
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
+  
+
 
 tokenSchema.index(
   {
@@ -149,6 +158,7 @@ tokenSchema.index(
     organizationId: 1,
     branchId: 1,
     serviceId: 1,
+    bookingDate: 1,
     sequenceNumber: 1,
   },
   {
@@ -161,8 +171,8 @@ tokenSchema.index(
   }
 );
 
-tokenSchema.index({ tenantType: 1, organizationId: 1, branchId: 1, serviceId: 1, createdAt: -1 });
-tokenSchema.index({ tenantType: 1, organization: 1, branch: 1, service: 1, createdAt: -1 });
+tokenSchema.index({ tenantType: 1, organizationId: 1, branchId: 1, serviceId: 1, bookingDate: 1, createdAt: -1 });
+tokenSchema.index({ tenantType: 1, organization: 1, branch: 1, service: 1, bookingDate: 1, createdAt: -1 });
 
 const Token = mongoose.model("Token", tokenSchema);
 

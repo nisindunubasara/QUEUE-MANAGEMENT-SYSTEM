@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+import "dotenv/config";
+
+
+
 const branchRequestSchema = new mongoose.Schema(
   {
     tenantType: {
@@ -85,6 +89,11 @@ const branchRequestSchema = new mongoose.Schema(
       trim: true,
     },
 
+    maxDailyTokens: {
+      type: Number,
+      default: 0,
+    },
+
     requestedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -168,6 +177,8 @@ branchRequestSchema.path("adminPassword").required(function () {
 branchRequestSchema.index({ tenantType: 1, status: 1 });
 branchRequestSchema.index({ requestedBy: 1, createdAt: -1 });
 branchRequestSchema.index({ organizationId: 1, divisionId: 1 });
+
+
 
 const BranchRequest = mongoose.model("BranchRequest", branchRequestSchema);
 

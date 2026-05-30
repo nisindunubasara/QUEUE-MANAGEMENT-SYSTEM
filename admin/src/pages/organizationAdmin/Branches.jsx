@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getBranches } from "../../services/branchService";
 import { getMyBranchRequests } from "../../services/branchRequestService";
+import SlideOver from "../../components/common/SlideOver";
+import { Building2, MapPin, Hash, Activity } from "lucide-react";
 
 // Shared organization-admin page for tenant-scoped branch management.
 export default function SharedOrganizationAdminBranches() {
@@ -10,18 +12,29 @@ export default function SharedOrganizationAdminBranches() {
   const { tenantType, organizationId, divisionId } = useAuth();
   const [branches, setBranches] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadBranches = async () => {
+    let isMounted = true;
+
+    const loadBranches = async (isInitialLoad = false) => {
       try {
-        setLoading(true);
-        setError(null);
+        if (isInitialLoad) {
+          setLoading(true);
+        }
+        if (isMounted) {
+          setError(null);
+        }
         const [branchesResponse, pendingResponse] = await Promise.all([
           getBranches(),
           getMyBranchRequests(),
         ]);
+
+        if (!isMounted) {
+          return;
+        }
 
         if (branchesResponse.success) {
           setBranches(branchesResponse.branches || []);
@@ -43,11 +56,22 @@ export default function SharedOrganizationAdminBranches() {
         setBranches([]);
         setPendingRequests([]);
       } finally {
-        setLoading(false);
+        if (isMounted && isInitialLoad) {
+          setLoading(false);
+        }
       }
     };
 
-    loadBranches();
+    loadBranches(true);
+
+    const intervalId = setInterval(() => {
+      loadBranches(false);
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   const handleAddBranch = () => {
@@ -113,7 +137,11 @@ export default function SharedOrganizationAdminBranches() {
               </thead>
               <tbody>
                 {branches.map((branch) => (
-                  <tr key={branch.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <tr
+                    key={branch.id}
+                    onClick={() => setSelectedItem(branch)}
+                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50"
+                  >
                     <td className="px-4 py-3 font-medium text-slate-900">{branch.branchName}</td>
                     <td className="px-4 py-3 text-slate-600">
                       <code className="rounded bg-slate-100 px-2 py-1 text-xs">{branch.branchCode || "—"}</code>
@@ -181,6 +209,72 @@ export default function SharedOrganizationAdminBranches() {
           )}
         </section>
       )}
+
+      <SlideOver open={!!selectedItem} onClose={() => setSelectedItem(null)} title="Branch Details">
+        {selectedItem && (
+          <div className="space-y-6">
+            <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-sky-100 p-3 text-sky-700">
+                  <Building2 className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold tracking-tight text-slate-900">{selectedItem.branchName}</h3>
+                  <p className="mt-1 text-sm text-slate-500">Branch overview and system details</p>
+                </div>
+              </div>
+
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                  selectedItem.status === "active"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {formatStatusLabel(selectedItem.status)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-sky-700 shadow-sm">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Location</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.location || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-emerald-700 shadow-sm">
+                    <Hash className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Branch Code</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.branchCode || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:col-span-2">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-white p-2 text-indigo-700 shadow-sm">
+                    <Activity className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Organization</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedItem.organizationName || "-"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </SlideOver>
     </div>
   );
 }

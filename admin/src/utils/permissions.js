@@ -20,9 +20,9 @@ export const roleHierarchy = {
     canCreateOrgAdmins: false,
     canViewReports: true,
   },
-  [CANONICAL_ROLES.COMPANY_SUPER_ADMIN]: {
-    label: "Company Super Admin",
-    dashboardPath: "/company-super-admin/dashboard",
+  [CANONICAL_ROLES.BANK_SUPER_ADMIN]: {
+    label: "Bank Super Admin",
+    dashboardPath: "/bank-super-admin/dashboard",
     canManageOrganizations: true,
     canManageBranches: false,
     canCreateBranchAdmins: false,
@@ -71,7 +71,7 @@ export const roleHierarchy = {
 const routeRoleMap = {
   "/police-super-admin": [CANONICAL_ROLES.POLICE_SUPER_ADMIN],
   "/hospital-super-admin": [CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN],
-  "/company-super-admin": [CANONICAL_ROLES.COMPANY_SUPER_ADMIN],
+  "/bank-super-admin": [CANONICAL_ROLES.BANK_SUPER_ADMIN],
   "/organization-admin": [CANONICAL_ROLES.ORGANIZATION_ADMIN],
   "/branch-admin": [CANONICAL_ROLES.BRANCH_ADMIN],
   "/staff": [CANONICAL_ROLES.STAFF],
@@ -81,7 +81,7 @@ const routeRoleMap = {
 export const isSuperAdmin = (role) => 
   role === CANONICAL_ROLES.POLICE_SUPER_ADMIN ||
   role === CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN ||
-  role === CANONICAL_ROLES.COMPANY_SUPER_ADMIN;
+  role === CANONICAL_ROLES.BANK_SUPER_ADMIN;
 
 export const isOrgAdmin = (role) => role === CANONICAL_ROLES.ORGANIZATION_ADMIN;
 
@@ -140,19 +140,20 @@ export const roleSidebarLinks = {
     { label: "Branch Admins", to: "/police-super-admin/branch-admins" },
     { label: "Reports", to: "/police-super-admin/reports" },
   ],
-  [CANONICAL_ROLES.COMPANY_SUPER_ADMIN]: [
-    { label: "Dashboard", to: "/company-super-admin/dashboard" },
-    { label: "Organizations", to: "/company-super-admin/organizations" },
-    { label: "Branches", to: "/company-super-admin/branches" },
-    { label: "Branch Requests", to: "/company-super-admin/branch-requests" },
-    { label: "Organization Admins", to: "/company-super-admin/organization-admins" },
-    { label: "Reports", to: "/company-super-admin/reports" },
+  [CANONICAL_ROLES.BANK_SUPER_ADMIN]: [
+    { label: "Dashboard", to: "/bank-super-admin/dashboard" },
+    { label: "Organizations", to: "/bank-super-admin/organizations" },
+    { label: "Branches", to: "/bank-super-admin/branches" },
+    { label: "Branch Requests", to: "/bank-super-admin/branch-requests" },
+    { label: "Organization Admins", to: "/bank-super-admin/organization-admins" },
+    { label: "Reports", to: "/bank-super-admin/reports" },
   ],
   [CANONICAL_ROLES.ORGANIZATION_ADMIN]: [
     { label: "Dashboard", to: "/organization-admin/dashboard" },
     { label: "Branches", to: "/organization-admin/branches" },
     { label: "Branch Admins", to: "/organization-admin/branch-admins" },
     { label: "Services", to: "/organization-admin/services" },
+    { label: "Settings", to: "/organization-admin/settings" },
     { label: "Reports", to: "/organization-admin/reports" },
   ],
   [CANONICAL_ROLES.BRANCH_ADMIN]: [
@@ -160,6 +161,7 @@ export const roleSidebarLinks = {
     { label: "Staff", to: "/branch-admin/staff" },
     { label: "Operations", to: "/branch-admin/operations" },
     { label: "Branch Details", to: "/branch-admin/branch-details" },
+    { label: "Settings", to: "/branch-admin/settings" },
   ],
   [CANONICAL_ROLES.STAFF]: [
     { label: "Dashboard", to: "/staff/dashboard" },

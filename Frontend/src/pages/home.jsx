@@ -18,13 +18,7 @@ const tenantList = [
     description: "Support complaint registration, public inquiries, and document verification services.",
     routeKey: "police",
     entryPath: "/police/select-organization",
-  },
-  {
-    title: "Supermarket Queue System",
-    description: "Control billing counters, express checkout, and customer support queues.",
-    routeKey: "supermarket",
-    entryPath: "/supermarket/select-organization",
-  },
+  }
 ];
 
 export default function Home() {
@@ -45,18 +39,18 @@ export default function Home() {
 
             <p className="mx-auto mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
               Choose a domain to explore the shared queue management frontend built for banks,
-              hospitals, police stations, and supermarkets.
+              hospitals, and police stations.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">4 Tenant Types</span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">3 Tenant Types</span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">Responsive UI</span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">Local Queue Tracking</span>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto mt-10 max-w-6xl grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mx-auto mt-10 max-w-6xl grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {tenantList.map((tenant) => (
             <TenantCard
               key={tenant.routeKey}

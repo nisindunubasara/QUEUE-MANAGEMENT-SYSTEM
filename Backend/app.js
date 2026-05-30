@@ -14,12 +14,15 @@ import counterRouter from "./routes/counterRoutes.js";
 import workSessionRouter from "./routes/workSessionRoutes.js";
 import userQueueRouter from "./routes/userQueueRoutes.js";
 import notificationRouter from "./routes/notificationRoutes.js";
+import { startDailyLimitCleanup } from "./utils/cronJobs.js";
 
 const app = express();
 
 // middleware
 app.use(cors());
 app.use(express.json());
+
+startDailyLimitCleanup();
 
 // routes
 app.use("/api/auth", authRoutes);

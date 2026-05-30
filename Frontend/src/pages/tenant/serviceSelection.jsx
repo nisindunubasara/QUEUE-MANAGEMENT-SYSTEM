@@ -4,13 +4,17 @@ import PageHeader from "../../components/common/PageHeader";
 import ServiceCard from "../../components/tenant/ServiceCard";
 import { useTenant } from "../../context/TenantContext";
 // Home Page එකේ පාවිච්චි කරපු generic service එක මෙතනටත් ගන්නවා
-import { getServicesForOrganization } from "../../services/tenantSelectionService";
+import {
+  getServicesForOrganization,
+  getServicesForTenantSelection,
+} from "../../services/tenantSelectionService";
 
 export default function ServiceSelection() {
   const {
+    selectedBranch,
+    selectedOrganizationId,
     tenantType,
     theme,
-    selectedOrganizationId,
     selectedService,
     setSelectedService,
   } = useTenant();
@@ -29,19 +33,25 @@ export default function ServiceSelection() {
   useEffect(() => {
     let isMounted = true;
 
-    const loadAllOrgServices = async () => {
-      if (!effectiveOrgId || !tenantType) {
-        setServices([]);
-        setLoadingServices(false);
-        return;
-      }
-
+    const loadServices = async () => {
       try {
         setLoadingServices(true);
         setFetchError("");
 
-        // මෙතනදී අපි මුළු Organization එකටම අදාළ services fetch කරනවා
-        const response = await getServicesForOrganization(tenantType, effectiveOrgId);
+        let response = [];
+
+        if (selectedBranch?.id) {
+          response = await getServicesForTenantSelection({
+            tenantType,
+            branchId: selectedBranch.id,
+          });
+        } else if (effectiveOrgId) {
+          // මෙතනදී අපි මුළු Organization එකටම අදාළ services fetch කරනවා
+          response = await getServicesForOrganization(tenantType, effectiveOrgId);
+        } else {
+          setServices([]);
+          return;
+        }
 
         if (!isMounted) return;
 
@@ -58,12 +68,16 @@ export default function ServiceSelection() {
       }
     };
 
-    loadAllOrgServices();
+    loadServices();
 
     return () => {
       isMounted = false;
     };
-  }, [tenantType, effectiveOrgId]);
+  }, [tenantType, selectedBranch?.id, effectiveOrgId]);
+
+  const pageDescription = selectedBranch?.id
+    ? `Services offered at ${selectedBranch.branchName || "this branch"}.`
+    : "All services offered by this organization across all branches.";
 
   // Filtering logic
   const filteredServices = useMemo(() => {
@@ -85,7 +99,7 @@ export default function ServiceSelection() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <PageHeader
             title="Available Services"
-            description="All services offered by this organization across all branches."
+            description={pageDescription}
           />
           <div className="w-full lg:w-72">
             <input

@@ -146,6 +146,7 @@ export const createService = async (req, res) => {
     const service = await Service.findOneAndUpdate(
       { serviceName: { $regex: new RegExp(`^${serviceName.trim()}$`, "i") } }, // නම පරීක්ෂාව
       { 
+        $addToSet: { branchIds: branchId },
         $setOnInsert: { // සේවාව අලුතින් සාදන විට පමණක් මේවා ඇතුළත් වේ
           tenantType,
           organizationId: organizationScope.organizationId,
@@ -158,10 +159,21 @@ export const createService = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    // 3. Branch එකේ 'services' array එකට ID එක එක් කිරීම
-    await Branch.findByIdAndUpdate(branchId, {
-      $addToSet: { services: service._id }
-    });
+    // 3. Branch එකේ 'services' array එකට { serviceId } object එක ලෙස එක් කිරීම
+    const branchToUpdate = await Branch.findById(branchId);
+    if (!branchToUpdate) {
+      return errorResponse(res, 404, "Branch not found in your organization scope");
+    }
+
+    const branchServices = Array.isArray(branchToUpdate.services) ? branchToUpdate.services : [];
+    const isServiceLinked = branchServices.some(
+      (entry) => String(entry?.serviceId || "") === String(service._id)
+    );
+
+    if (!isServiceLinked) {
+      branchToUpdate.services.push({ serviceId: service._id });
+      await branchToUpdate.save();
+    }
 
     return successResponse(res, 201, "Service linked to branch successfully", {
       service: {
@@ -177,7 +189,19 @@ export const createService = async (req, res) => {
        // නැවත වරක් සේවාව සොයාගෙන link කිරීමට උත්සාහ කරන්න (Retry logic වැනි)
        const retryService = await Service.findOne({ serviceName: { $regex: new RegExp(`^${req.body.serviceName.trim()}$`, "i") } });
        if (retryService) {
-          await Branch.findByIdAndUpdate(req.body.branchId, { $addToSet: { services: retryService._id } });
+          const retryBranch = await Branch.findById(req.body.branchId);
+          if (retryBranch) {
+            const retryServices = Array.isArray(retryBranch.services) ? retryBranch.services : [];
+            const alreadyLinked = retryServices.some(
+              (entry) => String(entry?.serviceId || "") === String(retryService._id)
+            );
+
+            if (!alreadyLinked) {
+              retryBranch.services.push({ serviceId: retryService._id });
+              await retryBranch.save();
+            }
+          }
+
           return successResponse(res, 201, "Service linked successfully on retry");
        }
     }

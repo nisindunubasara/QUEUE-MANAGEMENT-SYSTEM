@@ -78,8 +78,7 @@ export const getStaffBranchServices = async (req, res) => {
 
     const services = await Service.find(serviceQuery)
       .select("_id serviceName status")
-      .sort({ createdAt: -1 })
-      .lean();
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -133,8 +132,7 @@ export const getStaffBranchCounters = async (req, res) => {
 
     const counters = await Counter.find(counterQuery)
       .select("_id serviceId counterName status")
-      .sort({ createdAt: -1 })
-      .lean();
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -185,10 +183,9 @@ export const getCurrentStaffTask = async (req, res) => {
       }),
     )
       .select(
-        "_id serviceId serviceName counterId counterName startedAt status",
+        "_id serviceId serviceName counterId counterName startedAt status branchId",
       )
-      .sort({ startedAt: -1 })
-      .lean();
+      .sort({ startedAt: -1 });
 
     // If there is an active session, check if there's a currently called token for that counter
     let calledToken = null;
@@ -197,10 +194,7 @@ export const getCurrentStaffTask = async (req, res) => {
         counterId: activeSession.counterId,
         status: "Called",
       })
-        .select(
-          "_id tokenNumber fullName serviceName serviceId branchId counterId status createdAt startedAt",
-        )
-        .lean();
+        
       
       console.log("Called token for counter:", activeSession.counterId, calledToken);
     }
@@ -214,6 +208,7 @@ export const getCurrentStaffTask = async (req, res) => {
             serviceName: activeSession.serviceName,
             counterId: activeSession.counterId,
             counterName: activeSession.counterName,
+            branchId: activeSession.branchId,
             startedAt: activeSession.startedAt,
             status: activeSession.status,
           }
@@ -281,8 +276,7 @@ export const startStaffTask = async (req, res) => {
         status: "active",
       }),
     )
-      .select("_id startedAt")
-      .lean();
+      .select("_id startedAt");
 
     if (existingActiveSession) {
       return res.status(409).json({
@@ -433,8 +427,7 @@ export const startStaffTask = async (req, res) => {
         serviceId: service._id,
         status: "Waiting",
       })
-        .select("userId")
-        .lean();
+        .select("userId");
 
       const waitingUserIds = [...new Set(
         waitingTokens
@@ -517,6 +510,21 @@ export const endStaffTask = async (req, res) => {
         success: false,
         message: "No active work session found",
       });
+    }
+
+    if (activeSession.counterId) {
+      await Token.updateOne(
+        {
+          counterId: activeSession.counterId,
+          status: "Called",
+        },
+        {
+          $set: {
+            status: "Completed",
+            completedAt: new Date(),
+          },
+        },
+      );
     }
 
     const endedAt = new Date();
@@ -618,8 +626,7 @@ export const getStaffUsers = async (req, res) => {
       branchId,
     })
       .select("_id name email username phone role status")
-      .sort({ createdAt: -1 })
-      .lean();
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -713,7 +720,7 @@ export const createStaffUser = async (req, res) => {
     }
 
     if (
-      ["bank", "supermarket", "hospital", "company"].includes(
+      ["bank", "hospital"].includes(
         normalizedTenantType,
       ) &&
       !organizationId
