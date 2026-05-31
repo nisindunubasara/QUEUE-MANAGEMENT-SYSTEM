@@ -1,9 +1,38 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getBranchStaffUsers } from "../../services/branchAdminService";
+import { getBranchStaffUsers, getBranchAdminOperationsDashboard } from "../../services/branchAdminService";
 import SlideOver from "../../components/common/SlideOver";
 import { BadgeCheck, Mail, Phone, ShieldCheck, User } from "lucide-react";
+
+const StaffListBlock = ({ title, staff = [] }) => (
+  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+
+    {staff.length === 0 ? (
+      <p className="mt-3 text-sm text-slate-500">No staff or doctors</p>
+    ) : (
+      <div className="mt-3 space-y-2">
+        {staff.map((member) => (
+          <div
+            key={member.id || member._id}
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-medium text-slate-900">{member.name || "-"}</p>
+              {member.role && (
+                <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+                  {member.role}
+                </span>
+              )}
+            </div>
+            <p className="text-slate-600">{member.email || "-"}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </section>
+);
 
 const formatStatusLabel = (status = "") => {
   const normalized = String(status || "").trim().toLowerCase();
@@ -47,6 +76,7 @@ export default function BranchAdminStaff() {
   const navigate = useNavigate();
   const { tenantType } = useAuth();
   const [staffUsers, setStaffUsers] = useState([]);
+  const [staffSummary, setStaffSummary] = useState(null); // අලුත් State එකක් Operations Data වලට
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -55,26 +85,33 @@ export default function BranchAdminStaff() {
   useEffect(() => {
     let isMounted = true;
 
-    const loadStaffUsers = async (showLoading = false) => {
+    const loadStaffData = async (showLoading = false) => {
       try {
         if (showLoading) {
           setLoading(true);
         }
         setError("");
 
-        const data = await getBranchStaffUsers();
+        // API 2ම එකපාර Call කරනවා (Table එකටයි, Summary එකටයි)
+        const [usersData, dashboardData] = await Promise.all([
+          getBranchStaffUsers(),
+          getBranchAdminOperationsDashboard()
+        ]);
+
         if (!isMounted) {
           return;
         }
 
-        setStaffUsers(Array.isArray(data?.staff) ? data.staff : []);
+        setStaffUsers(Array.isArray(usersData?.staff) ? usersData.staff : []);
+        setStaffSummary(dashboardData?.staffSummary || null);
+
       } catch (err) {
         if (!isMounted) {
           return;
         }
-
-        setError(err?.message || "Failed to load staff users");
+        setError(err?.message || "Failed to load staff data");
         setStaffUsers([]);
+        setStaffSummary(null);
       } finally {
         if (isMounted && showLoading) {
           setLoading(false);
@@ -82,10 +119,10 @@ export default function BranchAdminStaff() {
       }
     };
 
-    loadStaffUsers(true);
+    loadStaffData(true);
 
     const intervalId = setInterval(() => {
-      loadStaffUsers(false);
+      loadStaffData(false);
     }, 5000);
 
     return () => {
@@ -93,6 +130,11 @@ export default function BranchAdminStaff() {
       clearInterval(intervalId);
     };
   }, []);
+
+  // Operations Dashboard එකෙන් එන විදියටම Variables ටික හදාගන්නවා
+  const activeStaff = Array.isArray(staffSummary?.activeStaff) ? staffSummary.activeStaff : [];
+  const inactiveStaff = Array.isArray(staffSummary?.inactiveStaff) ? staffSummary.inactiveStaff : [];
+  const unassignedStaff = Array.isArray(staffSummary?.unassignedStaff) ? staffSummary.unassignedStaff : [];
 
   return (
     <div className="space-y-6">
@@ -188,6 +230,18 @@ export default function BranchAdminStaff() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+      )}
+
+      {!loading && !error && (activeStaff.length > 0 || inactiveStaff.length > 0 || unassignedStaff.length > 0) && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold text-slate-900">Staff Summary</h2>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <StaffListBlock title="Active Staff" staff={activeStaff} />
+            <StaffListBlock title="Inactive Staff" staff={inactiveStaff} />
+            <StaffListBlock title="Unassigned Staff" staff={unassignedStaff} />
           </div>
         </section>
       )}

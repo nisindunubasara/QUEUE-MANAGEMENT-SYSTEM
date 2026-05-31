@@ -69,35 +69,6 @@ const buildDailyLimitValues = (dailyLimits = []) => {
   return values;
 };
 
-const StaffListBlock = ({ title, staff = [] }) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-    <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-
-    {staff.length === 0 ? (
-      <p className="mt-3 text-sm text-slate-500">No staff or doctors</p>
-    ) : (
-      <div className="mt-3 space-y-2">
-        {staff.map((member) => (
-          <div
-            key={member.id}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="font-medium text-slate-900">{member.name || "-"}</p>
-              {member.role && (
-                <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
-                  {member.role}
-                </span>
-              )}
-            </div>
-            <p className="text-slate-600">{member.email || "-"}</p>
-          </div>
-        ))}
-      </div>
-    )}
-  </section>
-);
-
 export default function BranchAdminOperations() {
   const { tenantType, organizationId, branchId: authBranchId } = useAuth();
   const [dashboard, setDashboard] = useState(null);
@@ -262,15 +233,6 @@ export default function BranchAdminOperations() {
   }, 0);
   const remainingTokensForSelectedDate =
     branchMaxTokens > 0 ? branchMaxTokens - allocatedTokensForSelectedDate : "Unlimited";
-  const activeStaff = Array.isArray(dashboard?.staffSummary?.activeStaff)
-    ? dashboard.staffSummary.activeStaff
-    : [];
-  const inactiveStaff = Array.isArray(dashboard?.staffSummary?.inactiveStaff)
-    ? dashboard.staffSummary.inactiveStaff
-    : [];
-  const unassignedStaff = Array.isArray(dashboard?.staffSummary?.unassignedStaff)
-    ? dashboard.staffSummary.unassignedStaff
-    : [];
   const unassignedCounters = Array.isArray(dashboard?.unassignedCounters)
   ? dashboard.unassignedCounters
   : [];
@@ -1065,18 +1027,6 @@ export default function BranchAdminOperations() {
         </section>
       )}
 
-      {!loading && !error && (
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-slate-900">Staff Summary</h2>
-          
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <StaffListBlock title="Active Staff" staff={activeStaff} />
-            <StaffListBlock title="Inactive Staff" staff={inactiveStaff} />
-            <StaffListBlock title="Unassigned Staff" staff={unassignedStaff} />
-          </div>
-        </section>
-      )}
     </div>
   );
 }
