@@ -1,8 +1,5 @@
 import Organization from "../models/Organization.js";
-import Branch from "../models/Branch.js";
 import User from "../models/User.js";
-import Service from "../models/Service.js";
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import {
   isOrganizationAdmin,
@@ -14,7 +11,6 @@ import { isValidObjectId, requireFields } from "../utils/validationHelpers.js";
 
 const ALLOWED_TENANT_TYPES = new Set(["police", "hospital", "bank", "supermarket"]);
 const ALLOWED_STATUS = new Set(["pending", "approved", "active", "inactive", "rejected"]);
-const ALLOWED_BRANCH_STATUS = new Set(["active", "inactive"]);
 const NON_POLICE_ORGANIZATION_CODE_PREFIX = {
   bank: "BNK",
   supermarket: "SUP",
@@ -23,11 +19,6 @@ const NON_POLICE_ORGANIZATION_CODE_PREFIX = {
 const ORGANIZATION_CODE_GENERATION_MAX_ATTEMPTS = 10;
 
 const normalizeText = (value = "") => String(value || "").trim();
-
-const toValidObjectIdOrNull = (value) => {
-  if (!value) return null;
-  return mongoose.Types.ObjectId.isValid(value) ? value : null;
-};
 
 const normalizeOptionalOrganizationCode = (value = "") => {
   const organizationCode = normalizeText(value).toUpperCase();
@@ -53,43 +44,6 @@ const generateUniqueOrganizationCodeForTenant = async (tenantType = "") => {
   }
 
   throw new Error("Unable to generate a unique organizationCode at this time");
-};
-
-const normalizeServiceEntry = (entry) => {
-  if (typeof entry === "string") {
-    const serviceName = normalizeText(entry);
-    return serviceName ? { serviceName } : null;
-  }
-
-  if (!entry || typeof entry !== "object") {
-    return null;
-  }
-
-  const serviceName = normalizeText(entry.serviceName || entry.name);
-  if (!serviceName) {
-    return null;
-  }
-
-  return {
-    serviceName,
-    description: normalizeText(entry.description),
-    status: normalizeText(entry.status || "active").toLowerCase(),
-  };
-};
-
-const normalizeServicesInput = (services = []) => {
-  const uniqueByName = new Map();
-
-  for (const service of Array.isArray(services) ? services : []) {
-    const normalized = normalizeServiceEntry(service);
-    if (!normalized) {
-      continue;
-    }
-
-    uniqueByName.set(normalized.serviceName.toLowerCase(), normalized);
-  }
-
-  return Array.from(uniqueByName.values());
 };
 
 const normalizeQueueSettings = (queueSettings = {}) => ({
@@ -137,7 +91,9 @@ const buildPoliceCreatePayload = (body = {}) => {
     contactNumber: normalizeText(body.contactNumber),
     email: normalizeText(body.email).toLowerCase(),
     category: normalizeText(body.category),
-    queueSettings: normalizeQueueSettings(body.queueSettings || {}),
+    queueSettings: body.queueSettings
+      ? normalizeQueueSettings(body.queueSettings)
+      : { bookingType: "token", tokenPrefix: "", maxDailyTokens: 0, priorityEnabled: false },
     status: normalizeText(body.status || "pending").toLowerCase(),
     approvedAt: body.approvedAt || null,
   };
@@ -245,123 +201,9 @@ const checkDuplicateAdminEmail = async (email = "") => {
   }
 };
 
-const resolveMainBranchPayload = ({ tenantType, organization, body = {}, requestedBy = null }) => {
-  const branchInput = body.branch || {};
-  const divisionName = normalizeText(organization.divisionName || organization.organizationName);
-  const organizationName = normalizeText(organization.organizationName);
-  const fallbackBranchName = tenantType === "police"
-    ? `${divisionName || "Police Division"} Main Branch`
-    : `${organizationName || "Organization"} Main Branch`;
-
-  const branchName = normalizeText(
-    branchInput.branchName ||
-      branchInput.name ||
-      body.branchName ||
-      body.divisionName ||
-      fallbackBranchName
-  );
-
-  const branchCode = normalizeText(
-    branchInput.branchCode ||
-      body.branchCode ||
-      body.stationCode
-  );
-
-  const status = normalizeText(branchInput.status || "active").toLowerCase();
-
-  return {
-    tenantType,
-    organizationId: organization._id,
-    organizationName,
-    divisionId: tenantType === "police" ? organization._id : null,
-    divisionName: tenantType === "police" ? divisionName || "Police Division" : null,
-    branchName,
-    shortName: normalizeText(branchInput.shortName || body.shortName),
-    branchCode: branchCode || null,
-    city: normalizeText(branchInput.city || body.city),
-    address: normalizeText(branchInput.address || body.address),
-    contactNumber: normalizeText(branchInput.contactNumber || body.contactNumber),
-    email: normalizeText(branchInput.email || body.email).toLowerCase(),
-    status: ALLOWED_BRANCH_STATUS.has(status) ? status : "active",
-    createdBy: requestedBy,
-    branchAdminAccess: false,
-    isMain: true,
-  };
-};
-
-const createMainBranchForOrganization = async ({ tenantType, organization, body = {}, requestedBy = null }) => {
-  const payload = resolveMainBranchPayload({
-    tenantType,
-    organization,
-    body,
-    requestedBy,
-  });
-
-  if (tenantType === "police") {
-    const existingMainBranch = await Branch.findOne({
-      tenantType,
-      divisionId: organization._id,
-      isMain: true,
-    });
-
-    if (existingMainBranch) {
-      return existingMainBranch;
-    }
-  }
-
-  return Branch.create(payload);
-};
-
-const createServicesForBranch = async ({
-  tenantType,
-  organization,
-  mainBranch,
-  services = [],
-  requestedBy = null,
-}) => {
-  const normalizedServices = normalizeServicesInput(services);
-  const createdByObjectId = toValidObjectIdOrNull(requestedBy);
-
-  if (normalizedServices.length === 0) {
-    return [];
-  }
-
-  const createdServices = [];
-
-  for (const service of normalizedServices) {
-    const filter = {
-      branchId: mainBranch._id,
-      serviceName: service.serviceName,
-    };
-
-    const setOnInsert = {
-      tenantType,
-      organizationId: organization._id,
-      divisionId: tenantType === "police" ? organization._id : null,
-      branchId: mainBranch._id,
-      isDivisionService: tenantType === "police",
-      serviceName: service.serviceName,
-      description: service.description || "",
-      status: service.status === "inactive" ? "inactive" : "active",
-      createdBy: createdByObjectId,
-    };
-
-    const savedService = await Service.findOneAndUpdate(
-      filter,
-      { $setOnInsert: setOnInsert },
-      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
-    );
-
-    createdServices.push(savedService);
-  }
-
-  return createdServices;
-};
-
 const createOrganizationAdminUser = async ({
   tenantType,
   organization,
-  mainBranch,
   admin,
 }) => {
   try {
@@ -395,10 +237,6 @@ const createOrganizationAdminUser = async ({
         organizationId: organization?._id,
         organizationName: organization?.organizationName,
       },
-      mainBranchContext: {
-        branchId: mainBranch?._id,
-        branchName: mainBranch?.branchName,
-      },
     });
 
     return await User.create(userPayload);
@@ -424,35 +262,6 @@ const buildOrganizationAdminResponse = (organizationAdmin = null) => {
     tenantType: organizationAdmin.tenantType || null,
   };
 };
-
-const buildMainBranchResponse = (mainBranch = null) => {
-  if (!mainBranch) {
-    return null;
-  }
-
-  return {
-    id: mainBranch._id,
-    branchName: mainBranch.branchName,
-    branchCode: mainBranch.branchCode,
-    tenantType: mainBranch.tenantType,
-    organizationId: mainBranch.organizationId || null,
-    organizationName: mainBranch.organizationName || null,
-    isMain: Boolean(mainBranch.isMain),
-    status: mainBranch.status,
-    createdBy: mainBranch.createdBy || null,
-  };
-};
-
-const buildServicesResponse = (services = []) =>
-  (Array.isArray(services) ? services : []).map((service) => ({
-    id: service._id,
-    serviceName: service.serviceName,
-    description: service.description,
-    status: service.status,
-    branchId: service.branchId,
-    organizationId: service.organizationId || null,
-    tenantType: service.tenantType,
-  }));
 
 const buildPatchPayload = (body = {}) => {
   const updates = {};
@@ -581,41 +390,22 @@ export const createOrganization = async (req, res) => {
     }
 
     const organization = await Organization.create(payload);
-    const organizationId = organization._id;
-    const requestedBy = req.user.id || req.user._id || null;
-    const mainBranch = await createMainBranchForOrganization({
-      tenantType,
-      organization,
-      body: req.body || {},
-      requestedBy,
-    });
-
-    const createdServices = await createServicesForBranch({
-      tenantType,
-      organization,
-      mainBranch,
-      services: req.body?.services,
-      requestedBy,
-    });
 
     const organizationAdmin = await createOrganizationAdminUser({
       tenantType,
       organization,
-      mainBranch,
       admin: parsedAdmin,
     });
 
     const responseData = {
       organization,
-      mainBranch: buildMainBranchResponse(mainBranch),
       organizationAdmin: buildOrganizationAdminResponse(organizationAdmin),
-      services: buildServicesResponse(createdServices),
     };
 
     if (tenantType === "police") {
       responseData.division = toLegacyPoliceDivisionShape(
         organization.toObject(),
-        responseData.services.map((service) => service.serviceName),
+        [],
         {
           name: parsedAdmin.name,
           email: parsedAdmin.email,
@@ -631,7 +421,7 @@ export const createOrganization = async (req, res) => {
     return successResponse(
       res,
       201,
-      "Organization, main branch, services, and organization admin created successfully",
+      "Organization and organization admin created successfully",
       responseData
     );
   } catch (error) {

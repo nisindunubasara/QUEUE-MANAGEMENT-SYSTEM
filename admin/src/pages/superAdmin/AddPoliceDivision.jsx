@@ -2,15 +2,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createOrganizationByTenant } from "../../services/tenantService";
 
-const categoryOptions = [
-  "Police Station",
-  "Traffic Division",
-  "CID",
-  "Women & Children Bureau",
-  "Tourist Police",
-  "Community Police Unit",
-];
-
 const provinces = [
   "Western",
   "Central",
@@ -38,20 +29,10 @@ const districts = [
   "Matara",
 ];
 
-const servicesList = [
-  "Complaint Entry",
-  "Accident Report",
-  "Traffic Fine Payment",
-  "Lost Item Complaint",
-  "Clearance Report",
-  "General Inquiry",
-];
-
 const initialState = {
   tenantType: "police",
   organizationName: "",
   district: districts[0],
-  isMain: true,
   branchName: "",
   shortName: "",
   stationCode: "",
@@ -60,8 +41,6 @@ const initialState = {
   address: "",
   contactNumber: "",
   email: "",
-  category: categoryOptions[0],
-  services: [],
   admin: {
     name: "",
     email: "",
@@ -69,12 +48,6 @@ const initialState = {
     username: "",
     password: "",
     role: "organization_admin",
-  },
-  queueSettings: {
-    bookingType: "token",
-    tokenPrefix: "",
-    maxDailyTokens: "",
-    priorityEnabled: false,
   },
   status: "pending",
 };
@@ -114,14 +87,6 @@ const generatePoliceCode = (district = "", branchName = "", shortName = "") => {
   return `POL-${districtPart}-${namePart}-${randomPart}`;
 };
 
-const generateTokenPrefix = (shortName = "", branchName = "") => {
-  return (
-    sanitizeCodePart(shortName).slice(0, 4) ||
-    takeFirstLetters(branchName, 4) ||
-    "POL"
-  );
-};
-
 export default function PoliceSuperAdminAddMainDivision() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialState);
@@ -155,27 +120,6 @@ export default function PoliceSuperAdminAddMainDivision() {
         ...prev.admin,
         [name]: value,
       },
-    }));
-  };
-
-  const handleQueueSettingsChange = (event) => {
-    const { name, value, type, checked } = event.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      queueSettings: {
-        ...prev.queueSettings,
-        [name]: type === "checkbox" ? checked : value,
-      },
-    }));
-  };
-
-  const handleServiceToggle = (serviceName) => {
-    setFormData((prev) => ({
-      ...prev,
-      services: prev.services.includes(serviceName)
-        ? prev.services.filter((service) => service !== serviceName)
-        : [...prev.services, serviceName],
     }));
   };
 
@@ -225,10 +169,6 @@ export default function PoliceSuperAdminAddMainDivision() {
       const finalStationCode =
         String(formData.stationCode || "").trim() || suggestedCode;
 
-      const finalTokenPrefix =
-        String(formData.queueSettings.tokenPrefix || "").trim() ||
-        generateTokenPrefix(formData.shortName, formData.branchName);
-
       const payload = {
         tenantType: "police",
         organizationName: String(formData.branchName || "").trim(),
@@ -242,7 +182,7 @@ export default function PoliceSuperAdminAddMainDivision() {
         address: String(formData.address || "").trim(),
         contactNumber: String(formData.contactNumber || "").trim(),
         email: String(formData.email || "").trim().toLowerCase(),
-        category: String(formData.category || "").trim(),
+        category: "Police Division",
         branch: {
           branchName: `${String(formData.branchName || "").trim()} Main Branch`,
           branchCode: finalStationCode,
@@ -253,17 +193,15 @@ export default function PoliceSuperAdminAddMainDivision() {
           email: String(formData.email || "").trim().toLowerCase(),
           status: "active",
         },
-        services: formData.services,
+        services: [],
         status: "pending",
         approvedAt: null,
-        isMain: Boolean(formData.isMain),
+        isMain: true,
         queueSettings: {
-          bookingType: String(
-            formData.queueSettings.bookingType || "token"
-          ).toLowerCase(),
-          tokenPrefix: finalTokenPrefix,
-          maxDailyTokens: Number(formData.queueSettings.maxDailyTokens || 0),
-          priorityEnabled: Boolean(formData.queueSettings.priorityEnabled),
+          bookingType: "token",
+          tokenPrefix: "",
+          maxDailyTokens: 0,
+          priorityEnabled: false,
         },
         admin: {
           name: String(formData.admin.name || "").trim(),
@@ -351,37 +289,20 @@ export default function PoliceSuperAdminAddMainDivision() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Category <span className="text-red-500">*</span>
+                  Province
                 </label>
                 <select
-                  name="category"
-                  value={formData.category}
+                  name="province"
+                  value={formData.province}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-100"
                 >
-                  {categoryOptions.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
+                  {provinces.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div className="md:col-span-2 flex items-center">
-                <input
-                  type="checkbox"
-                  id="isMain"
-                  name="isMain"
-                  checked={formData.isMain}
-                  onChange={handleChange}
-                  className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-2 focus:ring-sky-500"
-                />
-                <label
-                  htmlFor="isMain"
-                  className="ml-2 text-sm font-medium text-gray-700"
-                >
-                  This is a main division
-                </label>
               </div>
             </div>
           </div>
@@ -436,24 +357,6 @@ export default function PoliceSuperAdminAddMainDivision() {
                 <p className="mt-1 text-xs text-gray-500">
                   Leave empty to auto generate: {suggestedCode}
                 </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Province
-                </label>
-                <select
-                  name="province"
-                  value={formData.province}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-100"
-                >
-                  {provinces.map((province) => (
-                    <option key={province} value={province}>
-                      {province}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div>
@@ -514,29 +417,7 @@ export default function PoliceSuperAdminAddMainDivision() {
             </div>
           </div>
 
-          {/* Section 3: Services */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-gray-900">Services</h2>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              {servicesList.map((service) => (
-                <div key={service} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={service}
-                    checked={formData.services.includes(service)}
-                    onChange={() => handleServiceToggle(service)}
-                    className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-2 focus:ring-sky-500"
-                  />
-                  <label htmlFor={service} className="ml-3 text-sm text-gray-700">
-                    {service}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 4: Admin Information */}
+          {/* Section 3: Admin Information */}
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="mb-6 text-xl font-semibold text-gray-900">
               Division Admin Information
@@ -611,82 +492,6 @@ export default function PoliceSuperAdminAddMainDivision() {
                   placeholder="Enter password"
                   className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-100"
                 />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Queue Settings */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-gray-900">
-              Queue Settings
-            </h2>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Booking Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="bookingType"
-                  value={formData.queueSettings.bookingType}
-                  onChange={handleQueueSettingsChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-100"
-                >
-                  <option value="token">Token</option>
-                  <option value="appointment">Appointment</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Token Prefix
-                </label>
-                <input
-                  type="text"
-                  name="tokenPrefix"
-                  value={formData.queueSettings.tokenPrefix}
-                  onChange={handleQueueSettingsChange}
-                  placeholder={generateTokenPrefix(
-                    formData.shortName,
-                    formData.branchName
-                  )}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 uppercase text-gray-900 placeholder-gray-400 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-100"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Leave empty to auto generate from short name
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Max Daily Tokens
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  name="maxDailyTokens"
-                  value={formData.queueSettings.maxDailyTokens}
-                  onChange={handleQueueSettingsChange}
-                  placeholder="Enter max tokens"
-                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-100"
-                />
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="priorityEnabled"
-                  name="priorityEnabled"
-                  checked={formData.queueSettings.priorityEnabled}
-                  onChange={handleQueueSettingsChange}
-                  className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-2 focus:ring-sky-500"
-                />
-                <label
-                  htmlFor="priorityEnabled"
-                  className="ml-2 text-sm font-medium text-gray-700"
-                >
-                  Enable Priority Queue
-                </label>
               </div>
             </div>
           </div>

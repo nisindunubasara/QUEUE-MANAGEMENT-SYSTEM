@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { getBranchesByTenant, getOrganizationsByTenant } from "../../services/tenantService";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import SlideOver from "../../components/common/SlideOver";
 import { Building2, MapPin, Activity, Hash } from "lucide-react";
 
@@ -217,10 +219,24 @@ function OrganizationTable({ title, data, onAdd, addLabel, onEdit, onDelete, onV
   );
 }
 
-export default function Organizations() {
+export default function SharedSuperAdminOrganizations() {
   const navigate = useNavigate();
+  const { tenantType } = useAuth();
   const [bankOrganizations, setBankOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const textConfig = TENANT_TEXT[tenantType]?.organizations || TENANT_TEXT.bank.organizations;
+
+  const pageTitle = textConfig.pageTitle;
+  const pageSubtitle = textConfig.pageSubtitle;
+  const addLabel = textConfig.addLabel;
+
+  const addPath =
+    tenantType === "bank"
+      ? "/bank-super-admin/add-bank"
+      : tenantType === "hospital"
+        ? "/hospital-super-admin/add-hospital"
+        : "/police-super-admin/add-main-division";
 
   useEffect(() => {
     let isMounted = true;
@@ -232,8 +248,8 @@ export default function Organizations() {
         }
 
         const [bankOrgs, bankBranches] = await Promise.all([
-          getOrganizationsByTenant("bank"),
-          getBranchesByTenant("bank"),
+          getOrganizationsByTenant(tenantType),
+          getBranchesByTenant(tenantType),
         ]);
 
         if (!isMounted) {
@@ -266,7 +282,7 @@ export default function Organizations() {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, []);
+  }, [tenantType]);
 
   if (loading) {
     return (
@@ -278,14 +294,14 @@ export default function Organizations() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900">Organizations</h1>
-      <p className="mt-2 text-sm text-slate-500">Manage and view all organizations</p>
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900">{pageTitle}</h1>
+      <p className="mt-2 text-sm text-slate-500">{pageSubtitle}</p>
 
       <OrganizationTable
-        title="Bank Organizations"
+        title={textConfig.tableTitle}
         data={bankOrganizations}
-        addLabel="Add Bank"
-        onAdd={() => navigate("/bank-super-admin/add-bank")}
+        addLabel={addLabel}
+        onAdd={() => navigate(addPath)}
         onEdit={(o) => console.log(o)}
         onDelete={(id) => setBankOrganizations((prev) => prev.filter((i) => i.id !== id))}
         onViewDetails={(o) => console.log(o)}

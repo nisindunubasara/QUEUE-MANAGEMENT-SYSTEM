@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig"; // TENANT_TEXT එක import කළා
 import SlideOver from "../../components/common/SlideOver";
 import { Building2, MapPin, Hash, Activity } from "lucide-react";
 
@@ -225,10 +227,17 @@ function BranchTable({ title, data }) {
   );
 }
 
-export default function BankSuperAdminBranches() {
-  const [bankBranches, setBankBranches] = useState([]);
+export default function SharedSuperAdminBranches() {
+  const { tenantType } = useAuth();
+  const [branchItems, setBranchItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Config එක හරහා ඩයිනමික් කරපු කොටස
+  const textConfig = TENANT_TEXT[tenantType]?.branches || TENANT_TEXT.bank.branches;
+  const pageTitle = textConfig.pageTitle;
+  const pageSubtitle = textConfig.pageSubtitle;
+  const branchTitle = textConfig.tableTitle;
 
   useEffect(() => {
     let isMounted = true;
@@ -254,7 +263,7 @@ export default function BankSuperAdminBranches() {
         if (!isMounted) return;
 
         if (isMounted) {
-          setBankBranches(normalized.filter((b) => b.tenantType === "bank"));
+          setBranchItems(normalized.filter((b) => b.tenantType === tenantType));
         }
       } catch (err) {
         if (!isMounted) return;
@@ -281,7 +290,7 @@ export default function BankSuperAdminBranches() {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, []);
+  }, [tenantType]); // tenantType එක dependency array එකට එකතු කළා
 
   if (loading) {
     return (
@@ -293,8 +302,9 @@ export default function BankSuperAdminBranches() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900">Branch Management</h1>
-      <p className="mt-2 text-sm text-slate-500">Manage and view all bank branches</p>
+      {/* Hardcode කරලා තිබ්බ title සහ subtitle එක ඩයිනමික් කරලා තියෙන්නේ */}
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900">{pageTitle}</h1>
+      <p className="mt-2 text-sm text-slate-500">{pageSubtitle}</p>
 
       {error && (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700 text-sm">
@@ -303,8 +313,8 @@ export default function BankSuperAdminBranches() {
       )}
 
       <BranchTable
-        title="Bank Branches"
-        data={bankBranches}
+        title={branchTitle}
+        data={branchItems}
       />
     </div>
   );

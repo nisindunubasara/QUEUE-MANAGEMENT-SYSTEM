@@ -126,18 +126,18 @@ export const hasCapability = (role, capability) => {
 export const roleSidebarLinks = {
   [CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]: [
     { label: "Dashboard", to: "/hospital-super-admin/dashboard" },
-    { label: "Hospitals", to: "/hospital-super-admin/hospitals" },
-    { label: "Hospitals Registration", to: "/hospital-super-admin/registered-hospitals" },
-    { label: "Branch Requests", to: "/hospital-super-admin/branch-requests" },
-    { label: "Registered Admins", to: "/hospital-super-admin/hospital-admins" },
+    { label: "Districts", to: "/hospital-super-admin/registered-hospitals" },
+    { label: "Hospitals", to: "/hospital-super-admin/branches" },
+    { label: "Hospital Requests", to: "/hospital-super-admin/branch-requests" },
+    { label: "District Admins", to: "/hospital-super-admin/hospital-admins" },
+    { label: "Reports", to: "/hospital-super-admin/reports" },
   ],
   [CANONICAL_ROLES.POLICE_SUPER_ADMIN]: [
     { label: "Dashboard", to: "/police-super-admin/dashboard" },
-    { label: "Main Division", to: "/police-super-admin/main-division" },
-    { label: "Services", to: "/police-super-admin/services" },
-    { label: "Branches", to: "/police-super-admin/branches" },
-    { label: "Branch Requests", to: "/police-super-admin/branch-requests" },
-    { label: "Branch Admins", to: "/police-super-admin/branch-admins" },
+    { label: "Main Divisions", to: "/police-super-admin/main-division" },
+    { label: "Police Stations", to: "/police-super-admin/branches" },
+    { label: "Police Station Requests", to: "/police-super-admin/branch-requests" },
+    { label: "Division Admins", to: "/police-super-admin/branch-admins" },
     { label: "Reports", to: "/police-super-admin/reports" },
   ],
   [CANONICAL_ROLES.BANK_SUPER_ADMIN]: [

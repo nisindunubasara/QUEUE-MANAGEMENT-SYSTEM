@@ -11,10 +11,9 @@ import { getPendingBranchRequests } from "../../services/branchRequestService";
 import { Landmark, GitMerge, Clock, Users } from "lucide-react";
 import { BarChart, Bar, Cell, PieChart, Pie, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-const TENANTS = ["bank"];
 const userRoleColors = ["#0ea5e9", "#6366f1", "#10b981"];
 
-export default function BankSuperAdminDashboard() {
+export default function SharedSuperAdminDashboard() {
   const navigate = useNavigate();
   const { user, tenantType } = useAuth();
 
@@ -52,22 +51,22 @@ export default function BankSuperAdminDashboard() {
           userResults,
           pendingRequestsResult,
         ] = await Promise.all([
-          Promise.all(TENANTS.map((t) => getOrganizationsByTenant(t).catch((error) => {
+          getOrganizationsByTenant(tenantType).catch((error) => {
             console.error("getOrganizationsByTenant error:", error);
             return [];
-          }))),
-          Promise.all(TENANTS.map((t) => getBranchesByTenant(t).catch((error) => {
+          }),
+          getBranchesByTenant(tenantType).catch((error) => {
             console.error("getBranchesByTenant error:", error);
             return [];
-          }))),
+          }),
           getAllOrganizationAdmins().catch((error) => {
             console.error("getAllOrganizationAdmins error:", error);
             return [];
           }),
-          Promise.all(TENANTS.map((t) => getUsersByTenant(t).catch((error) => {
+          getUsersByTenant(tenantType).catch((error) => {
             console.error("getUsersByTenant error:", error);
             return [];
-          }))),
+          }),
           getPendingBranchRequests().catch((error) => {
             console.error("getPendingBranchRequests error:", error);
             return { branchRequests: [] };
@@ -78,9 +77,9 @@ export default function BankSuperAdminDashboard() {
           return;
         }
 
-        const organizations = orgResults.flat();
-        const branches = branchResults.flat();
-        const users = userResults.flat();
+        const organizations = orgResults || [];
+        const branches = branchResults || [];
+        const users = userResults || [];
         const pendingRequests = Array.isArray(pendingRequestsResult?.branchRequests)
           ? pendingRequestsResult.branchRequests
           : [];
@@ -188,9 +187,23 @@ export default function BankSuperAdminDashboard() {
     };
   }, []);
 
+  const pageTitle =
+    tenantType === "bank"
+      ? "Bank Network Overview"
+      : tenantType === "hospital"
+        ? "Hospital Network Overview"
+        : "Police Network Overview";
+
+  const totalEntityTitle =
+    tenantType === "bank"
+      ? "Total Banks"
+      : tenantType === "hospital"
+        ? "Total Hospitals"
+        : "Total Stations";
+
   const summaryCards = [
     {
-      title: "Total Banks",
+      title: totalEntityTitle,
       value: stats.companies,
       icon: Landmark,
       iconClass: "bg-sky-100 text-sky-700",
@@ -252,7 +265,7 @@ export default function BankSuperAdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold">{pageTitle}</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

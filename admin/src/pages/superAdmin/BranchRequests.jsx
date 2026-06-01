@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import SlideOver from "../../components/common/SlideOver";
 import { Building2, MapPin, User, BadgeCheck, Clock } from "lucide-react";
 import {
@@ -6,8 +7,6 @@ import {
   getPendingBranchRequests,
   rejectBranchRequest,
 } from "../../services/branchRequestService";
-
-const ALLOWED_TENANTS = new Set(["bank"]);
 
 const normalizeTenantType = (request) =>
   String(request?.tenantType || request?.tenant || "")
@@ -58,12 +57,17 @@ const getStatusBadgeClass = (status = "") => {
   return "bg-blue-100 text-blue-700";
 };
 
-export default function BankSuperAdminBranchRequests() {
+export default function SharedSuperAdminBranchRequests() {
+  const { tenantType } = useAuth();
   const [requests, setRequests] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState("");
+
+  const pageTitle = "Branch Requests";
+  const pageSubtitle = `Review and manage pending branch requests for your ${tenantType} network`;
+  const tableTitle = `Pending ${tenantType.charAt(0).toUpperCase() + tenantType.slice(1)} Requests`;
 
   useEffect(() => {
     let isMounted = true;
@@ -86,7 +90,7 @@ export default function BankSuperAdminBranchRequests() {
         const rawRequests = Array.isArray(response?.branchRequests) ? response.branchRequests : [];
 
         const filteredRequests = rawRequests.filter((request) =>
-          ALLOWED_TENANTS.has(normalizeTenantType(request))
+          normalizeTenantType(request) === tenantType
         );
 
         if (isMounted) {
@@ -116,7 +120,7 @@ export default function BankSuperAdminBranchRequests() {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, []);
+  }, [tenantType]);
 
   const handleApprove = async (requestId) => {
     setActionLoadingId(requestId);
@@ -149,10 +153,8 @@ export default function BankSuperAdminBranchRequests() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Branch Management</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Review and process pending bank branch requests.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{pageTitle}</h1>
+        <p className="mt-2 text-sm text-slate-500">{pageSubtitle}</p>
       </div>
 
       {error && (
@@ -167,10 +169,13 @@ export default function BankSuperAdminBranchRequests() {
         </div>
       ) : requests.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-          No pending bank branch requests found.
+          No pending branch requests found.
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900">
+            {tableTitle}
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50">
@@ -248,7 +253,7 @@ export default function BankSuperAdminBranchRequests() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold tracking-tight text-slate-900">{getBranchName(selectedItem)}</h3>
-                  <p className="mt-1 text-sm text-slate-500">Pending bank branch request overview</p>
+                  <p className="mt-1 text-sm text-slate-500">Pending branch request overview</p>
                 </div>
               </div>
 

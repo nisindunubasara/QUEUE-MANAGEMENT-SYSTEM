@@ -3,40 +3,23 @@ import { CANONICAL_ROLES, useAuth } from "../context/AuthContext";
 import AdminLayout from "../layouts/AdminLayout";
 import Login from "../pages/auth/Login";
 import NotFound from "../pages/shared/NotFound";
+import PortalSelection from "../pages/auth/PortalSelection";
 
-// Police Super Admin
-import PoliceSuperAdminDashboard from "../pages/policeSuperAdmin/Dashboard";
-import PoliceSuperAdminMainDivision from "../pages/policeSuperAdmin/MainDivision";
-import PoliceSuperAdminAddMainDivision from "../pages/policeSuperAdmin/AddMainDivision";
-import PoliceSuperAdminServices from "../pages/policeSuperAdmin/Services";
-import PoliceSuperAdminAddService from "../pages/policeSuperAdmin/AddService";
-import PoliceSuperAdminBranches from "../pages/policeSuperAdmin/Branches";
-import PoliceSuperAdminAddBranch from "../pages/policeSuperAdmin/AddBranch";
-import PoliceSuperAdminBranchAdmins from "../pages/policeSuperAdmin/BranchAdmins";
-import PoliceSuperAdminBranchRequests from "../pages/policeSuperAdmin/PoliceSuperAdminBranchRequests";
-import PoliceSuperAdminReports from "../pages/policeSuperAdmin/Reports";
+// Super Admin Forms
+import AddPoliceDivision from "../pages/superAdmin/AddPoliceDivision";
+import AddPoliceBranch from "../pages/superAdmin/AddPoliceBranch";
+import AddMainHospital from "../pages/superAdmin/AddMainHospital";
+import AddBranchHospital from "../pages/superAdmin/AddBranchHospital";
+import AddBank from "../pages/superAdmin/AddBank";
+import AddBankBranch from "../pages/superAdmin/AddBankBranch";
 
-// Hospital Super Admin
-import HospitalSuperAdminDashboard from "../pages/hospitalSuperAdmin/Dashboard";
-import HospitalSuperAdminHospitals from "../pages/hospitalSuperAdmin/Hospitals";
-import HospitalSuperAdminAddMainCategory from "../pages/hospitalSuperAdmin/AddMainCategory";
-import HospitalSuperAdminServices from "../pages/hospitalSuperAdmin/Services";
-import HospitalSuperAdminAddService from "../pages/hospitalSuperAdmin/AddService";
-import HospitalSuperAdminRegisteredHospitals from "../pages/hospitalSuperAdmin/RegisteredHospitals";
-import HospitalSuperAdminAddHospital from "../pages/hospitalSuperAdmin/AddHospital";
-import HospitalSuperAdminHospitalAdmins from "../pages/hospitalSuperAdmin/HospitalAdmins";
-import HospitalSuperAdminBranchRequests from "../pages/hospitalSuperAdmin/BranchRequests";
-import HospitalSuperAdminReports from "../pages/hospitalSuperAdmin/Reports";
-
-// Bank Super Admin
-import BankSuperAdminDashboard from "../pages/bankSuperAdmin/Dashboard";
-import BankSuperAdminOrganizations from "../pages/bankSuperAdmin/Organizations";
-import BankSuperAdminBranches from "../pages/bankSuperAdmin/Branches";
-import BankSuperAdminAddBank from "../pages/bankSuperAdmin/AddBank";
-import BankSuperAdminAddBankBranch from "../pages/bankSuperAdmin/AddBankBranch";
-import BankSuperAdminOrganizationAdmins from "../pages/bankSuperAdmin/OrganizationAdmins";
-import BankSuperAdminReports from "../pages/bankSuperAdmin/Reports";
-import BankSuperAdminBranchRequests from "../pages/bankSuperAdmin/BranchRequests";
+// Shared Super Admin Components
+import SharedSuperAdminDashboard from "../pages/superAdmin/Dashboard";
+import SharedSuperAdminOrganizations from "../pages/superAdmin/Organizations";
+import SharedSuperAdminBranches from "../pages/superAdmin/Branches";
+import SharedSuperAdminOrganizationAdmins from "../pages/superAdmin/OrganizationAdmins";
+import SharedSuperAdminBranchRequests from "../pages/superAdmin/BranchRequests";
+import SharedSuperAdminReports from "../pages/superAdmin/Reports";
 
 // Shared Organization Admin
 import SharedOrganizationAdminDashboard from "../pages/organizationAdmin/Dashboard";
@@ -57,7 +40,7 @@ import BranchAdminOperations from "../pages/branchAdmin/Operations";
 import BranchAdminDetails from "../pages/branchAdmin/BranchDetails";
 import BranchAdminSettings from "../pages/branchAdmin/Settings";
 
-// Staff
+// Staff & Doctor
 import StaffDashboard from "../pages/staff/Dashboard";
 import StaffProfile from "../pages/staff/Profile";
 import StaffTasks from "../pages/staff/Tasks";
@@ -71,7 +54,10 @@ export default function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={getDefaultDashboardPath(role)} replace />} />
+      {/* Landing Page */}
+      <Route path="/" element={<PortalSelection />} />
+
+      {/* Auth Routes */}
       <Route path="/login" element={<Login loginType="default" />} />
       <Route path="/police-login" element={<Login loginType="police_super_admin" />} />
       <Route path="/hospital-login" element={<Login loginType="hospital_super_admin" />} />
@@ -93,7 +79,7 @@ export default function AppRoutes() {
           path="/police-super-admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminDashboard />
+              <SharedSuperAdminDashboard />
             </ProtectedRoute>
           }
         />
@@ -101,7 +87,7 @@ export default function AppRoutes() {
           path="/police-super-admin/main-division"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminMainDivision />
+              <SharedSuperAdminOrganizations />
             </ProtectedRoute>
           }
         />
@@ -109,7 +95,7 @@ export default function AppRoutes() {
           path="/police-super-admin/add-main-division"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminAddMainDivision />
+              <AddPoliceDivision />
             </ProtectedRoute>
           }
         />
@@ -117,7 +103,7 @@ export default function AppRoutes() {
           path="/police-super-admin/branches"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminBranches />
+              <SharedSuperAdminBranches />
             </ProtectedRoute>
           }
         />
@@ -125,23 +111,7 @@ export default function AppRoutes() {
           path="/police-super-admin/add-branch"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminAddBranch />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/police-super-admin/services"
-          element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminServices />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/police-super-admin/add-service"
-          element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminAddService />
+              <AddPoliceBranch />
             </ProtectedRoute>
           }
         />
@@ -149,7 +119,7 @@ export default function AppRoutes() {
           path="/police-super-admin/branch-admins"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminBranchAdmins />
+              <SharedSuperAdminOrganizationAdmins />
             </ProtectedRoute>
           }
         />
@@ -157,7 +127,7 @@ export default function AppRoutes() {
           path="/police-super-admin/branch-requests"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminBranchRequests />
+              <SharedSuperAdminBranchRequests />
             </ProtectedRoute>
           }
         />
@@ -165,7 +135,7 @@ export default function AppRoutes() {
           path="/police-super-admin/reports"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.POLICE_SUPER_ADMIN]}>
-              <PoliceSuperAdminReports />
+              <SharedSuperAdminReports />
             </ProtectedRoute>
           }
         />
@@ -175,15 +145,7 @@ export default function AppRoutes() {
           path="/hospital-super-admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hospital-super-admin/hospitals"
-          element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminHospitals />
+              <SharedSuperAdminDashboard />
             </ProtectedRoute>
           }
         />
@@ -191,23 +153,7 @@ export default function AppRoutes() {
           path="/hospital-super-admin/add-category"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminAddMainCategory />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hospital-super-admin/services"
-          element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminServices />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hospital-super-admin/add-service"
-          element={
-            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminAddService />
+              <AddBranchHospital />
             </ProtectedRoute>
           }
         />
@@ -215,7 +161,7 @@ export default function AppRoutes() {
           path="/hospital-super-admin/registered-hospitals"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminRegisteredHospitals />
+              <SharedSuperAdminOrganizations />
             </ProtectedRoute>
           }
         />
@@ -223,7 +169,7 @@ export default function AppRoutes() {
           path="/hospital-super-admin/add-hospital"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminAddHospital />
+              <AddMainHospital />
             </ProtectedRoute>
           }
         />
@@ -231,7 +177,15 @@ export default function AppRoutes() {
           path="/hospital-super-admin/hospital-admins"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminHospitalAdmins />
+              <SharedSuperAdminOrganizationAdmins />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hospital-super-admin/branches"
+          element={
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
+              <SharedSuperAdminBranches />
             </ProtectedRoute>
           }
         />
@@ -239,7 +193,7 @@ export default function AppRoutes() {
           path="/hospital-super-admin/branch-requests"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminBranchRequests />
+              <SharedSuperAdminBranchRequests />
             </ProtectedRoute>
           }
         />
@@ -247,7 +201,7 @@ export default function AppRoutes() {
           path="/hospital-super-admin/reports"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.HOSPITAL_SUPER_ADMIN]}>
-              <HospitalSuperAdminReports />
+              <SharedSuperAdminReports />
             </ProtectedRoute>
           }
         />
@@ -257,7 +211,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminDashboard />
+              <SharedSuperAdminDashboard />
             </ProtectedRoute>
           }
         />
@@ -265,7 +219,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/organizations"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminOrganizations />
+              <SharedSuperAdminOrganizations />
             </ProtectedRoute>
           }
         />
@@ -273,7 +227,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/branches"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminBranches />
+              <SharedSuperAdminBranches />
             </ProtectedRoute>
           }
         />
@@ -281,7 +235,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/add-bank"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminAddBank />
+              <AddBank />
             </ProtectedRoute>
           }
         />
@@ -289,7 +243,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/add-bank-branch"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminAddBankBranch />
+              <AddBankBranch />
             </ProtectedRoute>
           }
         />
@@ -297,7 +251,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/organization-admins"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminOrganizationAdmins />
+              <SharedSuperAdminOrganizationAdmins />
             </ProtectedRoute>
           }
         />
@@ -305,7 +259,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/branch-requests"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminBranchRequests/>
+              <SharedSuperAdminBranchRequests />
             </ProtectedRoute>
           }
         />
@@ -313,7 +267,7 @@ export default function AppRoutes() {
           path="/bank-super-admin/reports"
           element={
             <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BANK_SUPER_ADMIN]}>
-              <BankSuperAdminReports />
+              <SharedSuperAdminReports />
             </ProtectedRoute>
           }
         />
@@ -425,14 +379,14 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
-          <Route
-            path="/branch-admin/settings"
-            element={
-              <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BRANCH_ADMIN]}>
-                <BranchAdminSettings />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/branch-admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={[CANONICAL_ROLES.BRANCH_ADMIN]}>
+              <BranchAdminSettings />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/branch-admin/branch-details"
           element={
@@ -485,8 +439,6 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
-        
       </Route>
 
       <Route path="*" element={<NotFound />} />

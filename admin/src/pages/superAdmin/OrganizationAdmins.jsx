@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { getOrganizationAdminsByTenant } from "../../services/tenantService";
 import SlideOver from "../../components/common/SlideOver";
 import { Building2, Mail, ShieldCheck, User, BadgeCheck } from "lucide-react";
@@ -30,13 +31,23 @@ const getStatusBadgeClass = (status = "") => {
   return "bg-blue-100 text-blue-700";
 };
 
-export default function BankSuperAdminOrganizationAdmins() {
+export default function SharedSuperAdminOrganizationAdmins() {
   const location = useLocation();
+  const { tenantType } = useAuth();
   const [admins, setAdmins] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage] = useState(location.state?.successMessage || "");
+
+  const pageTitle =
+    tenantType === "bank"
+      ? "Organization Admins"
+      : tenantType === "hospital"
+        ? "Hospital Admins"
+        : "Registered Admins";
+
+  const pageSubtitle = `Create and manage administrators for ${tenantType}s`;
 
   useEffect(() => {
     let isMounted = true;
@@ -51,14 +62,14 @@ export default function BankSuperAdminOrganizationAdmins() {
           setError("");
         }
 
-        const bankAdmins = await getOrganizationAdminsByTenant("bank");
+        const tenantAdmins = await getOrganizationAdminsByTenant(tenantType);
 
         if (!isMounted) {
           return;
         }
 
         if (isMounted) {
-          setAdmins(Array.isArray(bankAdmins) ? bankAdmins : []);
+          setAdmins(Array.isArray(tenantAdmins) ? tenantAdmins : []);
         }
       } catch (loadError) {
         if (!isMounted) {
@@ -86,15 +97,13 @@ export default function BankSuperAdminOrganizationAdmins() {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, []);
+  }, [tenantType]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Organization Admins</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Create and manage organization administrators for banks
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{pageTitle}</h1>
+        <p className="mt-2 text-sm text-slate-500">{pageSubtitle}</p>
       </div>
 
       {successMessage && (
