@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import {
   createBranchStaffUser,
   createHospitalBranchStaffUser,
@@ -9,6 +10,7 @@ import {
 export default function BranchAdminAddStaff() {
   const navigate = useNavigate();
   const { tenantType } = useAuth();
+  const textConfig = TENANT_TEXT[tenantType]?.branchAdminPages?.addStaff || TENANT_TEXT.bank.branchAdminPages.addStaff;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -54,8 +56,8 @@ export default function BranchAdminAddStaff() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Add Staff</h1>
-        <p className="mt-2 text-sm text-slate-500">Create a new staff user for your branch</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.pageTitle}</h1>
+        <p className="mt-2 text-sm text-slate-500">{textConfig.pageSubtitle}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -175,7 +177,7 @@ export default function BranchAdminAddStaff() {
             disabled={loading}
             className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create Staff"}
+            {loading ? textConfig.creatingBtn : textConfig.createBtn}
           </button>
         </div>
       </form>

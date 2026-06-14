@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import { Clock3, Gauge, Ticket, Users } from "lucide-react";
 import {
   getBranchAdminCounts,
@@ -43,6 +44,9 @@ export default function BranchAdminDashboard() {
   const [activeCounters, setActiveCounters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const textConfig =
+    TENANT_TEXT[tenantType]?.branchAdminPages?.dashboard || TENANT_TEXT.bank.branchAdminPages.dashboard;
 
   useEffect(() => {
     let isMounted = true;
@@ -144,25 +148,25 @@ export default function BranchAdminDashboard() {
 
   const cards = [
     {
-      title: "Total Tokens Issued Today",
+      title: textConfig.cards.totalTokens,
       value: totalTokensIssuedToday,
       icon: Ticket,
       iconClass: "bg-sky-100 text-sky-700",
     },
     {
-      title: "Waiting in Queue",
+      title: textConfig.cards.waiting,
       value: waitingInQueue,
       icon: Clock3,
       iconClass: "bg-amber-100 text-amber-700",
     },
     {
-      title: "Today's Token Capacity",
+      title: textConfig.cards.capacity,
       value: `${tokenCapacityPercent}%`,
       icon: Gauge,
       iconClass: "bg-indigo-100 text-indigo-700",
     },
     {
-      title: "Active Staff Members",
+      title: textConfig.cards.staff,
       value: activeStaffMembers,
       icon: Users,
       iconClass: "bg-emerald-100 text-emerald-700",
@@ -193,10 +197,10 @@ export default function BranchAdminDashboard() {
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Branch Admin</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Dashboard Overview</h1>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">{textConfig.roleLabel}</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{textConfig.pageTitle}</h1>
           <p className="mt-2 text-sm text-slate-600">
-            Welcome back, {user?.name || user?.username || user?.email || "Branch Admin"}.
+            Welcome back, {user?.name || user?.username || user?.email || textConfig.roleLabel}.
           </p>
           <p className="mt-1 text-xs text-slate-500">
             Signed in as {user?.email || "-"} | Tenant: {tenantType || "-"}
@@ -228,8 +232,8 @@ export default function BranchAdminDashboard() {
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Peak Hours</h2>
-            <p className="mt-1 text-sm text-slate-500">Tokens issued per hour from 8 AM to 5 PM</p>
+            <h2 className="text-lg font-semibold text-slate-900">{textConfig.charts.peakTitle}</h2>
+            <p className="mt-1 text-sm text-slate-500">{textConfig.charts.peakSubtitle}</p>
             <div className="mt-5 h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={peakHoursData}>
@@ -251,8 +255,8 @@ export default function BranchAdminDashboard() {
           </article>
 
           <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Service Limit Progress</h2>
-            <p className="mt-1 text-sm text-slate-500">Daily limit versus issued tokens by service</p>
+            <h2 className="text-lg font-semibold text-slate-900">{textConfig.charts.limitTitle}</h2>
+            <p className="mt-1 text-sm text-slate-500">{textConfig.charts.limitSubtitle}</p>
             <div className="mt-5 h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={serviceLimitProgressData} barGap={6}>
@@ -270,9 +274,9 @@ export default function BranchAdminDashboard() {
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-900">Live Counter Monitor</h2>
+            <h2 className="text-xl font-semibold text-slate-900">{textConfig.monitor.title}</h2>
             <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              Real-time Snapshot
+              {textConfig.monitor.subtitle}
             </span>
           </div>
 
@@ -293,18 +297,18 @@ export default function BranchAdminDashboard() {
 
                 <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-4 text-center">
                   <p className="text-xs font-medium uppercase tracking-[0.12em] text-indigo-500">
-                    Now Serving
+                    {textConfig.monitor.serving}
                   </p>
                   <p className="mt-2 text-3xl font-bold text-indigo-600">{counter.currentServingToken}</p>
                 </div>
 
                 <div className="mt-5 space-y-3 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">Staff</span>
+                    <span className="text-slate-500">{textConfig.monitor.staffLabel}</span>
                     <span className="font-medium text-slate-800">{counter.assignedStaff}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">Service</span>
+                    <span className="text-slate-500">{textConfig.monitor.serviceLabel}</span>
                     <span className="font-medium text-slate-800">{counter.serviceName}</span>
                   </div>
                 </div>
@@ -312,8 +316,8 @@ export default function BranchAdminDashboard() {
             ))}
             {activeCounters.length === 0 && (
               <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-                No active counters available.
-              </div>
+                  {textConfig.monitor.emptyState}
+                </div>
             )}
           </div>
         </section>

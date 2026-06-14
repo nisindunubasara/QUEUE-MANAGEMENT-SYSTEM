@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createBranchRequest } from "../../services/branchService";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 
 const normalizeBranchCodeSource = (value = "") =>
   String(value || "")
@@ -24,6 +25,9 @@ export default function AddBranch() {
   const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
   const isBankTenant = ["bank"].includes(normalizedTenantType);
   const isHospitalTenant = normalizedTenantType === "hospital";
+  const textConfig =
+    TENANT_TEXT[tenantType]?.orgAdminPages?.addBranch ||
+    TENANT_TEXT.bank.orgAdminPages.addBranch;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
@@ -120,8 +124,8 @@ export default function AddBranch() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Add Branch</h1>
-        <p className="mt-2 text-sm text-slate-500">Create a new branch in your organization</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.title}</h1>
+        <p className="mt-2 text-sm text-slate-500">{textConfig.subtitle}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -136,7 +140,7 @@ export default function AddBranch() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label htmlFor="branchName" className="mb-1.5 block text-sm font-medium text-slate-700">
-                Branch Name <span className="text-red-600">*</span>
+                {textConfig.nameLabel} <span className="text-red-600">*</span>
               </label>
               <input
                 id="branchName"
@@ -146,7 +150,7 @@ export default function AddBranch() {
                 onChange={handleChange}
                 required
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-4 focus:ring-sky-100"
-                placeholder="e.g., Main Branch"
+                placeholder={textConfig.namePlaceholder}
               />
             </div>
 
@@ -170,7 +174,7 @@ export default function AddBranch() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label htmlFor="branchCode" className="mb-1.5 block text-sm font-medium text-slate-700">
-                Branch Code
+                {textConfig.codeLabel}
               </label>
               <input
                 id="branchCode"
@@ -179,7 +183,7 @@ export default function AddBranch() {
                 value={formData.branchCode}
                 onChange={handleChange}
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-4 focus:ring-sky-100"
-                placeholder="e.g., BR-001"
+                placeholder={textConfig.codePlaceholder}
               />
             </div>
 
@@ -291,7 +295,7 @@ export default function AddBranch() {
                   onChange={handleChange}
                   className="rounded border-slate-300"
                 />
-                <span className="text-sm font-medium text-slate-700">Enable Branch Admin Access</span>
+                <span className="text-sm font-medium text-slate-700">{textConfig.adminToggleLabel}</span>
               </label>
             </div>
           </div>
@@ -299,7 +303,7 @@ export default function AddBranch() {
 
         {/* Branch Admin Details */}
         <div className="border-t border-slate-200 pt-6">
-          <h3 className="mb-4 text-base font-semibold text-slate-900">Branch Admin Details (Optional)</h3>
+          <h3 className="mb-4 text-base font-semibold text-slate-900">{textConfig.adminSectionTitle}</h3>
         
           {/* Admin Name & Email */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -398,7 +402,7 @@ export default function AddBranch() {
             disabled={loading}
             className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create Branch"}
+            {loading ? textConfig.submittingButton : textConfig.submitButton}
           </button>
         </div>
       </form>

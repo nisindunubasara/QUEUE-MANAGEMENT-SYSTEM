@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import {
   createBranchCounter,
   getBranchAdminOperationsDashboard,
@@ -71,6 +72,8 @@ const buildDailyLimitValues = (dailyLimits = []) => {
 
 export default function BranchAdminOperations() {
   const { tenantType, organizationId, branchId: authBranchId } = useAuth();
+  const textConfig =
+    TENANT_TEXT[tenantType]?.branchAdminPages?.operations || TENANT_TEXT.bank.branchAdminPages.operations;
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -434,7 +437,7 @@ export default function BranchAdminOperations() {
               [selectedLimitDate]: selectedValue,
             },
             dailyLoading: false,
-            dailyError: "Cannot allocate tokens. Exceeds the branch total daily limit.",
+            dailyError: textConfig.limitExceedError,
             dailySuccess: "",
           },
         }));
@@ -724,13 +727,13 @@ export default function BranchAdminOperations() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Branch Operations</h1>
-        <p className="mt-2 text-sm text-slate-500">Operations dashboard for {branchName}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.pageTitle}</h1>
+        <p className="mt-2 text-sm text-slate-500">{textConfig.pageSubtitle} {branchName}</p>
       </div>
 
       {loading && (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <p className="text-slate-500">Loading operations dashboard...</p>
+          <p className="text-slate-500">{textConfig.loadingText}</p>
         </div>
       )}
 
@@ -742,10 +745,10 @@ export default function BranchAdminOperations() {
 
       {!loading && !error && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Services</h2>
+          <h2 className="text-xl font-semibold text-slate-900">{textConfig.servicesTitle}</h2>
 
           {services.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No services found for this branch</p>
+            <p className="mt-4 text-sm text-slate-500">{textConfig.noServices}</p>
           ) : (
             <div className="mt-4 space-y-4">
               {services.map((service) => {
@@ -766,8 +769,8 @@ export default function BranchAdminOperations() {
                           {service.serviceName || "Unnamed Service"}
                         </h3>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600">
-                          <span className="rounded-full bg-slate-200 px-2.5 py-1">Active Counters: {service.activeCounterCount || 0}</span>
-                          <span className="rounded-full bg-slate-200 px-2.5 py-1">Inactive Counters: {service.inactiveCounterCount || 0}</span>
+                          <span className="rounded-full bg-slate-200 px-2.5 py-1">{textConfig.activeCounters}: {service.activeCounterCount || 0}</span>
+                          <span className="rounded-full bg-slate-200 px-2.5 py-1">{textConfig.inactiveCounters}: {service.inactiveCounterCount || 0}</span>
                         </div>
                       </div>
 
@@ -797,7 +800,7 @@ export default function BranchAdminOperations() {
                         onClick={() => toggleCounterForm(serviceId)}
                         className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                       >
-                        {isFormOpen ? "Hide Counter Form" : "+ Add Counter"}
+                        {isFormOpen ? textConfig.hideCounterBtn : textConfig.addCounterBtn}
                       </button>
 
                       {formState.success && !isFormOpen && (
@@ -813,7 +816,7 @@ export default function BranchAdminOperations() {
                               htmlFor={`counter-name-${serviceId}`}
                               className="mb-1.5 block text-sm font-medium text-slate-700"
                             >
-                              Counter Name
+                              {textConfig.counterNameLabel}
                             </label>
                             <input
                               id={`counter-name-${serviceId}`}
@@ -821,7 +824,7 @@ export default function BranchAdminOperations() {
                               value={formState.counterName || ""}
                               onChange={(event) => handleCounterFormChange(serviceId, event.target.value)}
                               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-4 focus:ring-sky-100"
-                              placeholder="e.g., Counter A"
+                              placeholder={textConfig.counterNamePlaceholder}
                             />
                           </div>
 
@@ -831,7 +834,7 @@ export default function BranchAdminOperations() {
                             disabled={isCreating}
                             className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
                           >
-                            {isCreating ? "Creating..." : "Create"}
+                            {isCreating ? textConfig.creatingBtn : textConfig.createBtn}
                           </button>
                         </div>
 
@@ -846,15 +849,15 @@ export default function BranchAdminOperations() {
                     )}
 
                     {counters.length === 0 ? (
-                      <p className="mt-4 text-sm text-slate-500">No counters yet</p>
+                      <p className="mt-4 text-sm text-slate-500">{textConfig.noCounters}</p>
                     ) : (
                       <div className="mt-4 overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-slate-200">
-                              <th className="px-3 py-2 text-left font-semibold text-slate-900">Counter</th>
+                              <th className="px-3 py-2 text-left font-semibold text-slate-900">{textConfig.counterCol}</th>
                               <th className="px-3 py-2 text-left font-semibold text-slate-900">Status</th>
-                              <th className="px-3 py-2 text-left font-semibold text-slate-900">Assigned Staff</th>
+                              <th className="px-3 py-2 text-left font-semibold text-slate-900">{textConfig.staffCol}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -873,7 +876,7 @@ export default function BranchAdminOperations() {
                                   </span>
                                 </td>
                                 <td className="px-3 py-2 text-slate-600">
-                                  {counter.assignedStaff?.name || "No staff assigned"}
+                                  {counter.assignedStaff?.name || textConfig.noStaff}
                                 </td>
                               </tr>
                             ))}
@@ -891,7 +894,7 @@ export default function BranchAdminOperations() {
 
       {!loading && !error && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Daily Limits Management</h2>
+          <h2 className="text-xl font-semibold text-slate-900">{textConfig.limitsTitle}</h2>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {upcomingDates.map((date) => {
@@ -919,35 +922,35 @@ export default function BranchAdminOperations() {
           <section className="my-6 rounded-2xl border border-sky-200 bg-sky-50 p-5 shadow-sm">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="rounded-xl border border-sky-100 bg-white/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Branch Limit</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{textConfig.branchLimitLabel}</p>
                 <p className="mt-1 text-2xl font-bold text-slate-900">{branchMaxTokens > 0 ? branchMaxTokens : "Unlimited"}</p>
               </div>
 
               <div className="rounded-xl border border-sky-100 bg-white/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Allocated Tokens</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{textConfig.allocatedLabel}</p>
                 <p className="mt-1 text-2xl font-bold text-slate-900">{allocatedTokensForSelectedDate}</p>
               </div>
 
               <div className="rounded-xl border border-sky-100 bg-white/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Remaining Tokens</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{textConfig.remainingLabel}</p>
                 <p className="mt-1 text-2xl font-bold text-slate-900">{remainingTokensForSelectedDate}</p>
               </div>
             </div>
           </section>
 
           {services.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No services found for daily limit management</p>
+            <p className="mt-4 text-sm text-slate-500">{textConfig.noLimitServices}</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left">
-                    <th className="px-3 py-2 font-semibold text-slate-900">Service Name</th>
-                    <th className="px-3 py-2 font-semibold text-slate-900">Limit ({selectedLimitDate})</th>
-                    <th className="px-3 py-2 font-semibold text-slate-900">Allocated Tokens</th>
-                    <th className="px-3 py-2 font-semibold text-slate-900">Remaining Tokens</th>
-                    <th className="px-3 py-2 font-semibold text-slate-900">Est. Time/Token (min)</th>
-                    <th className="px-3 py-2 font-semibold text-slate-900">Action</th>
+                    <th className="px-3 py-2 font-semibold text-slate-900">{textConfig.serviceNameCol}</th>
+                    <th className="px-3 py-2 font-semibold text-slate-900">{textConfig.limitCol} ({selectedLimitDate})</th>
+                    <th className="px-3 py-2 font-semibold text-slate-900">{textConfig.allocatedLabel}</th>
+                    <th className="px-3 py-2 font-semibold text-slate-900">{textConfig.remainingLabel}</th>
+                    <th className="px-3 py-2 font-semibold text-slate-900">{textConfig.estTimeCol}</th>
+                    <th className="px-3 py-2 font-semibold text-slate-900">{textConfig.actionCol}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1008,7 +1011,7 @@ export default function BranchAdminOperations() {
                             disabled={Boolean(limitForms[serviceId]?.dailyLoading)}
                             className="rounded-xl bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
                           >
-                            {limitForms[serviceId]?.dailyLoading ? "Saving..." : "Save"}
+                            {limitForms[serviceId]?.dailyLoading ? textConfig.savingBtn : textConfig.saveBtn}
                           </button>
                           {limitForms[serviceId]?.dailyError && (
                             <p className="mt-2 text-xs text-red-700">{limitForms[serviceId].dailyError}</p>

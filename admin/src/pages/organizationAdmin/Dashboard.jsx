@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import { Building2, Clock, Layers, Users } from "lucide-react";
 import { getBranches } from "../../services/branchService";
 import { getOrganizationAdminCounts } from "../../services/organizationAdminService";
@@ -28,7 +29,9 @@ const branchStatusColors = ["#10b981", "#f59e0b", "#94a3b8"];
 
 export default function SharedOrganizationAdminDashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, tenantType } = useAuth();
+  const textConfig =
+    TENANT_TEXT[tenantType]?.orgAdminPages?.dashboard || TENANT_TEXT.bank.orgAdminPages.dashboard;
   const [counts, setCounts] = useState({
     branches: 0,
     services: 0,
@@ -146,25 +149,25 @@ export default function SharedOrganizationAdminDashboard() {
 
   const cards = [
     {
-      title: "Branches",
+      title: textConfig.cards.branches,
       value: counts.branches,
       icon: Building2,
       iconClass: "bg-sky-100 text-sky-700",
     },
     {
-      title: "Pending Requests",
+      title: textConfig.cards.requests,
       value: pendingRequestsCount,
       icon: Clock,
       iconClass: "bg-amber-100 text-amber-700",
     },
     {
-      title: "Services",
+      title: textConfig.cards.services,
       value: counts.services,
       icon: Layers,
       iconClass: "bg-indigo-100 text-indigo-700",
     },
     {
-      title: "Workforce",
+      title: textConfig.cards.workforce,
       value: workforce,
       icon: Users,
       iconClass: "bg-emerald-100 text-emerald-700",
@@ -210,9 +213,9 @@ export default function SharedOrganizationAdminDashboard() {
       <div className="mx-auto max-w-6xl space-y-8">
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Organization Admin
+            {textConfig.roleLabel}
           </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Dashboard Overview</h1>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{textConfig.pageTitle}</h1>
           <p className="mt-2 text-sm text-slate-600">
             Welcome back, {user?.name || user?.username || user?.email || "Organization Admin"}.
           </p>
@@ -244,10 +247,8 @@ export default function SharedOrganizationAdminDashboard() {
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Branch Status Overview</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Breakdown of branch lifecycle status across the organization.
-            </p>
+            <h2 className="text-lg font-semibold text-slate-900">{textConfig.charts.statusTitle}</h2>
+            <p className="mt-1 text-sm text-slate-500">{textConfig.charts.statusSubtitle}</p>
             <div className="mt-5 h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -272,10 +273,8 @@ export default function SharedOrganizationAdminDashboard() {
           </article>
 
           <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Top Branches by Staff Size</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Compare service volume for the busiest branches.
-            </p>
+            <h2 className="text-lg font-semibold text-slate-900">{textConfig.charts.topTitle}</h2>
+            <p className="mt-1 text-sm text-slate-500">{textConfig.charts.topSubtitle}</p>
             <div className="mt-5 h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dynamicTopBranchesData}>
@@ -291,8 +290,8 @@ export default function SharedOrganizationAdminDashboard() {
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
-            <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
-            <p className="mt-1 text-sm text-slate-500">Create and manage core organization records.</p>
+            <h2 className="text-lg font-semibold text-slate-900">{textConfig.quickActions.title}</h2>
+            <p className="mt-1 text-sm text-slate-500">{textConfig.quickActions.subtitle}</p>
 
             <div className="mt-5 space-y-3">
               <button
@@ -300,21 +299,21 @@ export default function SharedOrganizationAdminDashboard() {
                 onClick={() => navigate("/organization-admin/add-branch")}
                 className="w-full rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
               >
-                + Add New Branch
+                {textConfig.quickActions.addBranch}
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/organization-admin/branch-admins")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                + Add Branch Admin
+                {textConfig.quickActions.addAdmin}
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/organization-admin/add-service")}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                + Add Service
+                {textConfig.quickActions.addService}
               </button>
             </div>
           </article>
@@ -322,8 +321,8 @@ export default function SharedOrganizationAdminDashboard() {
           <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Recent Branch Activity</h2>
-                <p className="mt-1 text-sm text-slate-500">Latest branch creation updates across the organization.</p>
+                <h2 className="text-lg font-semibold text-slate-900">{textConfig.recent.title}</h2>
+                <p className="mt-1 text-sm text-slate-500">{textConfig.recent.subtitle}</p>
               </div>
             </div>
 
@@ -331,7 +330,7 @@ export default function SharedOrganizationAdminDashboard() {
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-600">Branch Name</th>
+                    <th className="px-4 py-3 text-left font-semibold text-slate-600">{textConfig.recent.nameCol}</th>
                     <th className="px-4 py-3 text-left font-semibold text-slate-600">Code</th>
                     <th className="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
                     <th className="px-4 py-3 text-left font-semibold text-slate-600">Created At</th>

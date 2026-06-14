@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import SlideOver from "../../components/common/SlideOver";
 import { Building2, MapPin, User, BadgeCheck, Clock } from "lucide-react";
 import {
@@ -59,15 +60,14 @@ const getStatusBadgeClass = (status = "") => {
 
 export default function SharedSuperAdminBranchRequests() {
   const { tenantType } = useAuth();
+  const textConfig =
+    TENANT_TEXT[tenantType]?.superAdminPages?.branchRequests ||
+    TENANT_TEXT.bank.superAdminPages.branchRequests;
   const [requests, setRequests] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState("");
-
-  const pageTitle = "Branch Requests";
-  const pageSubtitle = `Review and manage pending branch requests for your ${tenantType} network`;
-  const tableTitle = `Pending ${tenantType.charAt(0).toUpperCase() + tenantType.slice(1)} Requests`;
 
   useEffect(() => {
     let isMounted = true;
@@ -153,8 +153,8 @@ export default function SharedSuperAdminBranchRequests() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{pageTitle}</h1>
-        <p className="mt-2 text-sm text-slate-500">{pageSubtitle}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.pageTitle}</h1>
+        <p className="mt-2 text-sm text-slate-500">{textConfig.pageSubtitle}</p>
       </div>
 
       {error && (
@@ -165,23 +165,23 @@ export default function SharedSuperAdminBranchRequests() {
 
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-          Loading pending branch requests...
+          {textConfig.loadingText}
         </div>
       ) : requests.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-          No pending branch requests found.
+          {textConfig.noRequestsText}
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900">
-            {tableTitle}
+            {textConfig.tableTitle}
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Branch Name</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-600">Organization Name</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-600">{textConfig.branchLabel}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-600">{textConfig.orgLabel}</th>
                   <th className="px-4 py-3 text-left font-semibold text-slate-600">City</th>
                   <th className="px-4 py-3 text-left font-semibold text-slate-600">Requested By</th>
                   <th className="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
@@ -242,7 +242,7 @@ export default function SharedSuperAdminBranchRequests() {
       <SlideOver
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        title="Branch Request Details"
+        title={textConfig.slideOverTitle}
       >
         {selectedItem && (
           <div className="space-y-6">
@@ -253,7 +253,7 @@ export default function SharedSuperAdminBranchRequests() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold tracking-tight text-slate-900">{getBranchName(selectedItem)}</h3>
-                  <p className="mt-1 text-sm text-slate-500">Pending branch request overview</p>
+                  <p className="mt-1 text-sm text-slate-500">{textConfig.slideOverSubtitle}</p>
                 </div>
               </div>
 
@@ -297,7 +297,7 @@ export default function SharedSuperAdminBranchRequests() {
                     <BadgeCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Organization</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{textConfig.orgLabel}</p>
                     <p className="mt-1 text-sm font-medium text-slate-900">{getOrganizationName(selectedItem)}</p>
                   </div>
                 </div>

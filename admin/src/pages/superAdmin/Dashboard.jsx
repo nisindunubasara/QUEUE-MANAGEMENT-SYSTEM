@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import {
   getOrganizationsByTenant,
   getBranchesByTenant,
@@ -16,6 +17,9 @@ const userRoleColors = ["#0ea5e9", "#6366f1", "#10b981"];
 export default function SharedSuperAdminDashboard() {
   const navigate = useNavigate();
   const { user, tenantType } = useAuth();
+  const textConfig =
+    TENANT_TEXT[tenantType]?.superAdminPages?.dashboard ||
+    TENANT_TEXT.bank.superAdminPages.dashboard;
 
   const [stats, setStats] = useState({
     companies: 0,
@@ -187,29 +191,15 @@ export default function SharedSuperAdminDashboard() {
     };
   }, []);
 
-  const pageTitle =
-    tenantType === "bank"
-      ? "Bank Network Overview"
-      : tenantType === "hospital"
-        ? "Hospital Network Overview"
-        : "Police Network Overview";
-
-  const totalEntityTitle =
-    tenantType === "bank"
-      ? "Total Banks"
-      : tenantType === "hospital"
-        ? "Total Hospitals"
-        : "Total Stations";
-
   const summaryCards = [
     {
-      title: totalEntityTitle,
+      title: textConfig.totalEntityTitle,
       value: stats.companies,
       icon: Landmark,
       iconClass: "bg-sky-100 text-sky-700",
     },
     {
-      title: "Total Branches",
+      title: textConfig.totalSubEntityTitle,
       value: stats.branches,
       icon: GitMerge,
       iconClass: "bg-emerald-100 text-emerald-700",
@@ -265,7 +255,7 @@ export default function SharedSuperAdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-8">
-        <h1 className="text-3xl font-bold">{pageTitle}</h1>
+        <h1 className="text-3xl font-bold">{textConfig.pageTitle}</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -291,8 +281,8 @@ export default function SharedSuperAdminDashboard() {
         {/* Charts */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Branches per Organization</h2>
-            <p className="mt-1 text-sm text-slate-500">Branch distribution across organizations.</p>
+            <h2 className="text-lg font-semibold text-slate-900">{textConfig.chartTitle}</h2>
+            <p className="mt-1 text-sm text-slate-500">{textConfig.chartSubtitle}</p>
             <div className="mt-5 h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={branchChartData} barCategoryGap="20%">
@@ -336,29 +326,29 @@ export default function SharedSuperAdminDashboard() {
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-1">
             <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
-            <p className="mt-1 text-sm text-slate-500">Common bank administration tasks.</p>
+            <p className="mt-1 text-sm text-slate-500">{textConfig.quickActionsSubtitle}</p>
 
             <div className="mt-5 space-y-3">
               <button
                 type="button"
-                onClick={() => navigate("/bank-super-admin/add-bank")}
+                onClick={() => navigate(textConfig.paths.add)}
                 className="w-full rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
               >
-                + Add Bank Organization
+                {textConfig.addEntityLabel}
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/bank-super-admin/branch-requests")}
+                onClick={() => navigate(textConfig.paths.requests)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                Review Pending Branches
+                {textConfig.reviewRequestsLabel}
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/bank-super-admin/organizations")}
+                onClick={() => navigate(textConfig.paths.organizations)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                View All Organizations
+                {textConfig.viewAllLabel}
               </button>
             </div>
           </article>
@@ -366,8 +356,8 @@ export default function SharedSuperAdminDashboard() {
           <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Recently Onboarded Branches</h2>
-                <p className="mt-1 text-sm text-slate-500">Latest 5 branches added to the bank network.</p>
+                <h2 className="text-lg font-semibold text-slate-900">{textConfig.recentTitle}</h2>
+                <p className="mt-1 text-sm text-slate-500">{textConfig.recentSubtitle}</p>
               </div>
             </div>
 

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import {
   getBranchAdminOperationsDashboard,
   updateBranchOperatingHours,
@@ -40,6 +42,8 @@ const getUpcomingDates = () => {
 const upcomingDates = getUpcomingDates();
 
 export default function BranchAdminDetails() {
+  const { tenantType } = useAuth();
+  const textConfig = TENANT_TEXT[tenantType]?.branchAdminPages?.branchDetails || TENANT_TEXT.bank.branchAdminPages.branchDetails;
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -163,14 +167,14 @@ export default function BranchAdminDetails() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">Loading branch details...</div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-500">{textConfig.loadingText || "Loading branch details..."}</div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900">Branch Details</h1>
-      <p className="mt-2 text-sm text-slate-500">Manage your branch operating hours</p>
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.pageTitle}</h1>
+      <p className="mt-2 text-sm text-slate-500">{textConfig.pageSubtitle} {branchName}</p>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">{branchName}</h2>
@@ -197,12 +201,12 @@ export default function BranchAdminDetails() {
         </div>
 
         <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900">Branch Operating Hours</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{textConfig.opHoursTitle}</h3>
           <p className="mt-1 text-sm text-slate-500">Set open and close times for the selected date.</p>
 
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Open Time</label>
+                <label className="block text-sm font-medium text-slate-700">{textConfig.openTimeLabel}</label>
               <input
                 type="time"
                 value={operatingHoursForms[selectedLimitDate]?.openTime || ""}
@@ -212,7 +216,7 @@ export default function BranchAdminDetails() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700">Close Time</label>
+              <label className="block text-sm font-medium text-slate-700">{textConfig.closeTimeLabel}</label>
               <input
                 type="time"
                 value={operatingHoursForms[selectedLimitDate]?.closeTime || ""}
@@ -228,7 +232,7 @@ export default function BranchAdminDetails() {
                 disabled={Boolean(operatingHoursForms[selectedLimitDate]?.loading)}
                 className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
               >
-                {operatingHoursForms[selectedLimitDate]?.loading ? "Saving..." : "Save Hours"}
+                {operatingHoursForms[selectedLimitDate]?.loading ? textConfig.savingBtn : textConfig.saveBtn}
               </button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import { getOrganizationBranchServices } from "../../services/organizationAdminService";
 
 const formatStatusLabel = (status = "") => {
@@ -36,6 +37,8 @@ export default function SharedOrganizationAdminServices() {
   const [error, setError] = useState("");
 
   const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
+  const textConfig =
+    TENANT_TEXT[normalizedTenantType]?.orgAdminPages?.services || TENANT_TEXT.bank.orgAdminPages.services;
   const showDivisionServices = normalizedTenantType === "police";
 
   const divisionServices = branches.flatMap((branch) => {
@@ -137,15 +140,15 @@ export default function SharedOrganizationAdminServices() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Services</h1>
-          <p className="mt-2 text-sm text-slate-500">Manage services across your branches</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.title}</h1>
+          <p className="mt-2 text-sm text-slate-500">{textConfig.subtitle}</p>
         </div>
 
         <button
           onClick={() => navigate("/organization-admin/add-service")}
           className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700"
         >
-          + Add Service
+          {textConfig.addBtn}
         </button>
       </div>
 
@@ -163,16 +166,16 @@ export default function SharedOrganizationAdminServices() {
 
       {!loading && !error && branches.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <p className="text-slate-500">No branches found</p>
+          <p className="text-slate-500">{textConfig.noData}</p>
         </div>
       )}
 
       {!loading && !error && branches.length > 0 && showDivisionServices && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Division Services</h2>
+          <h2 className="text-xl font-semibold text-slate-900">{textConfig.divisionServicesTitle}</h2>
 
           {divisionServices.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No division services</p>
+            <p className="mt-4 text-sm text-slate-500">{textConfig.noDivisionServices}</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
@@ -180,7 +183,7 @@ export default function SharedOrganizationAdminServices() {
                   <tr className="border-b border-slate-200">
                     <th className="px-4 py-3 text-left font-semibold text-slate-900">Service Name</th>
                     <th className="px-4 py-3 text-left font-semibold text-slate-900">Description</th>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-900">Branch</th>
+                    <th className="px-4 py-3 text-left font-semibold text-slate-900">{textConfig.branchCol}</th>
                     <th className="px-4 py-3 text-left font-semibold text-slate-900">Status</th>
                   </tr>
                 </thead>
@@ -226,13 +229,13 @@ export default function SharedOrganizationAdminServices() {
             <p className="mt-1 mb-4 text-sm text-slate-500">{group.description || "-"}</p>
 
             {group.branches.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">No branches offer this service</p>
+              <p className="mt-4 text-sm text-slate-500">{textConfig.noBranchesOffer}</p>
             ) : (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="px-4 py-3 text-left font-semibold text-slate-900">Branch Name</th>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-900">{textConfig.branchCol}</th>
                       <th className="px-4 py-3 text-left font-semibold text-slate-900">Status</th>
                     </tr>
                   </thead>

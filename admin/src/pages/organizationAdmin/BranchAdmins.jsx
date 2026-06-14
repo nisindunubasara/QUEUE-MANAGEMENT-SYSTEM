@@ -7,6 +7,7 @@ import {
 } from "../../services/organizationAdminService";
 import SlideOver from "../../components/common/SlideOver";
 import { BadgeCheck, Building2, Mail, Phone, ShieldCheck, User } from "lucide-react";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 
 const formatStatusLabel = (status = "") => {
   const normalized = String(status || "").trim().toLowerCase();
@@ -35,6 +36,9 @@ const getStatusBadgeClass = (status = "") => {
 // Shared organization-admin page for tenant-scoped branch admin management.
 export default function SharedOrganizationAdminBranchAdmins() {
   const { tenantType } = useAuth();
+  const textConfig =
+    TENANT_TEXT[tenantType]?.orgAdminPages?.branchAdmins ||
+    TENANT_TEXT.bank.orgAdminPages.branchAdmins;
   const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
   const isBankTenant = ["bank", "hospital", "police"].includes(normalizedTenantType);
 
@@ -203,14 +207,14 @@ export default function SharedOrganizationAdminBranchAdmins() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Branch Admins</h1>
-        <p className="mt-2 text-sm text-slate-500">View and manage branch administrators grouped by branch</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.title}</h1>
+        <p className="mt-2 text-sm text-slate-500">{textConfig.subtitle}</p>
       </div>
 
       {isBankTenant && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Add Branch Admin</h2>
-          <p className="mt-2 text-sm text-slate-500">Create a branch administrator for one of your branches</p>
+          <h2 className="text-xl font-semibold text-slate-900">{textConfig.addFormTitle}</h2>
+          <p className="mt-2 text-sm text-slate-500">{textConfig.addFormSubtitle}</p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-6">
             {successMessage && (
@@ -340,7 +344,7 @@ export default function SharedOrganizationAdminBranchAdmins() {
                 disabled={submitting || loading || branches.length === 0}
                 className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
               >
-                {submitting ? "Creating..." : "Create Branch Admin"}
+                {submitting ? textConfig.addFormButtonSubmitting : textConfig.addFormButton}
               </button>
             </div>
           </form>

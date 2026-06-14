@@ -5,11 +5,15 @@ import { getBranches } from "../../services/branchService";
 import { getMyBranchRequests } from "../../services/branchRequestService";
 import SlideOver from "../../components/common/SlideOver";
 import { Building2, MapPin, Hash, Activity } from "lucide-react";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 
 // Shared organization-admin page for tenant-scoped branch management.
 export default function SharedOrganizationAdminBranches() {
   const navigate = useNavigate();
   const { tenantType, organizationId, divisionId } = useAuth();
+  const textConfig =
+    TENANT_TEXT[tenantType]?.orgAdminPages?.branches ||
+    TENANT_TEXT.bank.orgAdminPages.branches;
   const [branches, setBranches] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -90,14 +94,14 @@ export default function SharedOrganizationAdminBranches() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Branches</h1>
-          <p className="mt-2 text-sm text-slate-500">Manage branches in your organization</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.title}</h1>
+          <p className="mt-2 text-sm text-slate-500">{textConfig.subtitle}</p>
         </div>
         <button
           onClick={handleAddBranch}
           className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700"
         >
-          + Add Branch
+          {textConfig.addButton}
         </button>
       </div>
 
@@ -122,7 +126,7 @@ export default function SharedOrganizationAdminBranches() {
       {!loading && branches.length > 0 && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold text-slate-900">Active Branches</h2>
+            <h2 className="text-xl font-semibold text-slate-900">{textConfig.activeTableTitle}</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -170,7 +174,7 @@ export default function SharedOrganizationAdminBranches() {
       {!loading && !error && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-xl font-semibold text-slate-900">Pending Branch Requests</h2>
+            <h2 className="text-xl font-semibold text-slate-900">{textConfig.pendingTableTitle}</h2>
           </div>
 
           {pendingRequests.length === 0 ? (

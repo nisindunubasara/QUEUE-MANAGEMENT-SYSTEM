@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import { getBranchStaffUsers, getBranchAdminOperationsDashboard } from "../../services/branchAdminService";
 import SlideOver from "../../components/common/SlideOver";
 import { BadgeCheck, Mail, Phone, ShieldCheck, User } from "lucide-react";
 
-const StaffListBlock = ({ title, staff = [] }) => (
+const StaffListBlock = ({ title, staff = [], emptyText = "No records" }) => (
   <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
 
     {staff.length === 0 ? (
-      <p className="mt-3 text-sm text-slate-500">No staff or doctors</p>
+      <p className="mt-3 text-sm text-slate-500">{emptyText}</p>
     ) : (
       <div className="mt-3 space-y-2">
         {staff.map((member) => (
@@ -75,6 +76,7 @@ const getStatusBadgeClass = (status = "") => {
 export default function BranchAdminStaff() {
   const navigate = useNavigate();
   const { tenantType } = useAuth();
+  const textConfig = TENANT_TEXT[tenantType]?.branchAdminPages?.staff || TENANT_TEXT.bank.branchAdminPages.staff;
   const [staffUsers, setStaffUsers] = useState([]);
   const [staffSummary, setStaffSummary] = useState(null); // අලුත් State එකක් Operations Data වලට
   const [selectedItem, setSelectedItem] = useState(null);
@@ -140,8 +142,8 @@ export default function BranchAdminStaff() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Staff Management</h1>
-          <p className="mt-2 text-sm text-slate-500">Manage staff members for your branch</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.pageTitle}</h1>
+          <p className="mt-2 text-sm text-slate-500">{textConfig.pageSubtitle}</p>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -149,7 +151,7 @@ export default function BranchAdminStaff() {
             onClick={() => navigate("/branch-admin/add-staff")}
             className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700"
           >
-            + Add Staff
+            {textConfig.addStaffBtn}
           </button>
 
           {isHospitalTenant && (
@@ -157,7 +159,7 @@ export default function BranchAdminStaff() {
               onClick={() => navigate("/branch-admin/add-doctor")}
               className="inline-flex items-center justify-center rounded-xl border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-50"
             >
-              + Add Doctor
+              {textConfig.addDoctorBtn}
             </button>
           )}
         </div>
@@ -177,7 +179,7 @@ export default function BranchAdminStaff() {
 
       {!loading && !error && staffUsers.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <p className="text-slate-500">No staff users found</p>
+          <p className="text-slate-500">{textConfig.emptyStaff}</p>
         </div>
       )}
 
@@ -236,17 +238,17 @@ export default function BranchAdminStaff() {
 
       {!loading && !error && (activeStaff.length > 0 || inactiveStaff.length > 0 || unassignedStaff.length > 0) && (
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-slate-900">Staff Summary</h2>
+          <h2 className="text-xl font-semibold text-slate-900">{textConfig.summaryTitle}</h2>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <StaffListBlock title="Active Staff" staff={activeStaff} />
-            <StaffListBlock title="Inactive Staff" staff={inactiveStaff} />
-            <StaffListBlock title="Unassigned Staff" staff={unassignedStaff} />
+            <StaffListBlock title={textConfig.summaryActive} staff={activeStaff} emptyText={textConfig.emptyBlockText} />
+            <StaffListBlock title={textConfig.summaryInactive} staff={inactiveStaff} emptyText={textConfig.emptyBlockText} />
+            <StaffListBlock title={textConfig.summaryUnassigned} staff={unassignedStaff} emptyText={textConfig.emptyBlockText} />
           </div>
         </section>
       )}
 
-      <SlideOver open={!!selectedItem} onClose={() => setSelectedItem(null)} title="Staff Details">
+      <SlideOver open={!!selectedItem} onClose={() => setSelectedItem(null)} title={textConfig.slideOverTitle}>
         {selectedItem && (
           <div className="space-y-6">
             <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -256,7 +258,7 @@ export default function BranchAdminStaff() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold tracking-tight text-slate-900">{selectedItem.name || "-"}</h3>
-                  <p className="mt-1 text-sm text-slate-500">Branch staff member details</p>
+                  <p className="mt-1 text-sm text-slate-500">{textConfig.slideOverSubtitle}</p>
                 </div>
               </div>
 

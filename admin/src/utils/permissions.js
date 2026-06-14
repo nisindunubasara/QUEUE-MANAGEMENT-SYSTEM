@@ -1,4 +1,5 @@
 import { CANONICAL_ROLES, normalizeRole } from "../context/AuthContext";
+import { TENANT_TEXT } from "./tenantTextConfig";
 
 // Role hierarchy and capabilities
 export const roleHierarchy = {
@@ -113,8 +114,18 @@ export const getDefaultDashboardPath = (role) => {
   return "/login";
 };
 
-export const getRoleLabel = (role) => {
-  const config = roleHierarchy[role];
+export const getRoleLabel = (role, tenantType = null) => {
+  const normalizedRole = normalizeRole(role);
+  const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
+
+  if (normalizedTenantType) {
+    const tenantLabel = TENANT_TEXT[normalizedTenantType]?.roleLabels?.[normalizedRole];
+    if (tenantLabel) {
+      return tenantLabel;
+    }
+  }
+
+  const config = roleHierarchy[normalizedRole];
   return config ? config.label : "Unknown Role";
 };
 
@@ -174,7 +185,38 @@ export const roleSidebarLinks = {
   ],
 };
 
-export const getSidebarLinksByRole = (role) => {
+export const getSidebarLinksByRole = (role, tenantType = null) => {
   const normalizedRole = normalizeRole(role);
-  return roleSidebarLinks[normalizedRole] || [];
+  let links = roleSidebarLinks[normalizedRole] || [];
+
+  const normalizedTenantType = String(tenantType || "").trim().toLowerCase();
+
+  if (
+    normalizedTenantType &&
+    normalizedRole === CANONICAL_ROLES.ORGANIZATION_ADMIN
+  ) {
+    const sidebar = TENANT_TEXT[normalizedTenantType]?.sidebar;
+
+    if (sidebar) {
+      links = links.map((link) => {
+        if (link.to === "/organization-admin/branches") {
+          return {
+            ...link,
+            label: sidebar.branches || link.label,
+          };
+        }
+
+        if (link.to === "/organization-admin/branch-admins") {
+          return {
+            ...link,
+            label: sidebar.branchAdmins || link.label,
+          };
+        }
+
+        return link;
+      });
+    }
+  }
+
+  return links;
 };

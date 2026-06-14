@@ -1,13 +1,18 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getSidebarLinksByRole } from "../utils/permissions";
+// 1. getRoleLabel එක import කරගන්නවා
+import { getSidebarLinksByRole, getRoleLabel } from "../utils/permissions";
 
 export default function AdminLayout() {
-  const { user, role, logout } = useAuth();
+  // 2. useAuth එකෙන් tenantType එකත් එළියට ගන්නවා
+  const { user, role, tenantType, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navLinks = getSidebarLinksByRole(role);
+  const navLinks = getSidebarLinksByRole(role, tenantType);
+  
+  // 3. tenantType එකත් යවලා අදාල ලස්සන නම (Display Role) හදාගන්නවා
+  const displayRole = getRoleLabel(role, tenantType);
 
   const handleLogout = () => {
     logout();
@@ -51,8 +56,9 @@ export default function AdminLayout() {
               </div>
 
               <div className="flex items-center gap-3">
+                {/* 4. අලුතින් හදාගත්තු displayRole එක මෙතනට දෙනවා */}
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                  {role || "guest"}
+                  {displayRole || "guest"}
                 </span>
                 <button
                   type="button"

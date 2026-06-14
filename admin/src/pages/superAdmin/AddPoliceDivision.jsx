@@ -194,7 +194,7 @@ export default function PoliceSuperAdminAddMainDivision() {
           status: "active",
         },
         services: [],
-        status: "pending",
+        status: "inactive",
         approvedAt: null,
         isMain: true,
         queueSettings: {
@@ -323,7 +323,7 @@ export default function PoliceSuperAdminAddMainDivision() {
                   name="branchName"
                   value={formData.branchName}
                   onChange={handleChange}
-                  placeholder="Enter division name"
+                  placeholder="Example: Colombo Division"
                   className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-100"
                 />
               </div>

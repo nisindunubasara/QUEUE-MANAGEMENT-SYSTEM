@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { TENANT_TEXT } from "../../utils/tenantTextConfig";
 import { getBranches } from "../../services/branchService";
 import { createOrganizationService } from "../../services/organizationAdminService";
 
 export default function AddService() {
   const navigate = useNavigate();
+  const { tenantType } = useAuth();
+  const textConfig = TENANT_TEXT[tenantType]?.orgAdminPages?.addService || TENANT_TEXT.bank.orgAdminPages.addService;
   const [branches, setBranches] = useState([]);
   const [branchesLoading, setBranchesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +66,7 @@ export default function AddService() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (formData.branchIds.length === 0) {
-      setError("Please select at least one branch.");
+      setError(textConfig.emptySelectionError);
       return;
     }
 
@@ -99,8 +103,8 @@ export default function AddService() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Add Service (Bulk)</h1>
-        <p className="mt-2 text-sm text-slate-500">Create a service for multiple branches at once</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{textConfig.title}</h1>
+        <p className="mt-2 text-sm text-slate-500">{textConfig.subtitle}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -113,7 +117,7 @@ export default function AddService() {
         <div className="space-y-6">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Select Branches (Hold Ctrl/Cmd to select multiple) <span className="text-red-600">*</span>
+              {textConfig.selectLabel} <span className="text-red-600">*</span>
             </label>
             <select
               multiple // 4. Multiple attribute එක එකතු කළා
@@ -129,7 +133,7 @@ export default function AddService() {
                 </option>
               ))}
             </select>
-            <p className="mt-2 text-xs text-slate-400 font-normal">Selected: {formData.branchIds.length} branches</p>
+            <p className="mt-2 text-xs text-slate-400 font-normal">Selected: {formData.branchIds.length} {textConfig.selectedText}</p>
           </div>
 
           <div>
@@ -185,7 +189,7 @@ export default function AddService() {
             disabled={submitting || branchesLoading || formData.branchIds.length === 0}
             className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
           >
-            {submitting ? "Creating Services..." : `Create for ${formData.branchIds.length} Branches`}
+            {submitting ? "Creating Services..." : `Create for ${formData.branchIds.length} ${textConfig.selectedText}`}
           </button>
         </div>
       </form>
